@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Phone } from 'lucide-react';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

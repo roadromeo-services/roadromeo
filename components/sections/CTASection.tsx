@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Phone, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/common';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 export const CTASection = () => {
   const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=Hi! I want to book a bike service.`;

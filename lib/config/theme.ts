@@ -1,9 +1,9 @@
 export type ThemeName = 'orange-blue' | 'red-black';
 
 export const themeConfig = {
-  // Change this to switch themes, or set via VITE_THEME env variable
-  activeTheme: (import.meta.env.VITE_THEME || 'orange-blue') as ThemeName,
-
+  // Change this to switch themes, or set via NEXT_THEME env variable
+  // activeTheme: (import.meta.env.NEXT_THEME || 'orange-blue') as ThemeName,
+  activeTheme: 'red-black',
   themes: {
     'orange-blue': {
       name: 'Trust & Conversion',
@@ -20,7 +20,7 @@ export const themeConfig = {
   },
 };
 
-export const getActiveTheme = () => themeConfig.themes[themeConfig.activeTheme];
+export const getActiveTheme = () => 'red-black';
 
 // Apply theme to document
 export const applyTheme = (theme: ThemeName) => {

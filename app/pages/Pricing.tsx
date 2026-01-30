@@ -1,7 +1,7 @@
 import { CheckCircle } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/common';
 import { pricingPackages } from '@/lib/data/pricing';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 export const Pricing = () => {
   const whatsappLink = (packageName: string) =>

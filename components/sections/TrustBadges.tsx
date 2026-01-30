@@ -1,5 +1,5 @@
 import { Star, Users, Shield, Truck } from 'lucide-react';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 const badges = [
   {

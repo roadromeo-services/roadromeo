@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from 'react';
 import { Star, ExternalLink } from 'lucide-react';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 export const Reviews = () => {
   useEffect(() => {
@@ -39,8 +39,8 @@ export const Reviews = () => {
                   <Star
                     key={i}
                     className={`w-6 h-6 ${i < Math.round(siteConfig.stats.rating)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-gray-300'
+                      ? 'text-yellow-400 fill-yellow-400'
+                      : 'text-gray-300'
                       }`}
                   />
                 ))}

@@ -150,6 +150,46 @@ h6 {
   @apply w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all duration-300 placeholder:text-slate-400;
 }
 
+
+
+
+@keyframes pulse-scale {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+.animate-pulse-scale {
+  animation: pulse-scale 2s infinite;
+}
+
+
+
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full border-4 border-slate-50 hover:bg-slate-400 transition-colors;
+}
+
 /* Floating Animation */
 @keyframes float {
   0% {

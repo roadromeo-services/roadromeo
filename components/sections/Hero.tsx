@@ -1,12 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { Bike, CheckCircle, Smartphone, ShieldCheck, MapPin } from 'lucide-react';
+import { Bike, CheckCircle, Smartphone, ShieldCheck, MapPin, User } from 'lucide-react';
 import { Button, Select } from '@/components/common';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 import { bikeBrands, getModelsByBrand } from '@/lib/data/bikes';
 import { services } from '@/lib/data/services';
 
 export const Hero = () => {
+  const [name, setName] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedService, setSelectedService] = useState('');
@@ -31,8 +32,11 @@ export const Hero = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const message = `Hi! I want to book a bike service.\n\nBike: ${selectedBrand} ${selectedModel}\nService: ${selectedService}\nPhone: ${phone}`;
-    const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
+    const brandName = bikeBrands.find(b => b.id === selectedBrand)?.name || selectedBrand;
+    const serviceName = services.find(s => s.id === selectedService)?.name || selectedService;
+
+    const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}%0AService: ${serviceName}`;
+    const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${message}`;
     window.open(whatsappLink, '_blank');
   };
 
@@ -99,6 +103,24 @@ export const Hero = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 ml-1">Name</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    pattern="[a-zA-Z\s]{2,}"
+                    required
+                    className="input-premium !pl-14"
+                  />
+                </div>
+              </div>
+
               <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700 ml-1">Brand</label>
@@ -111,6 +133,7 @@ export const Hero = () => {
                       setSelectedModel('');
                     }}
                     required
+                    className="!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300"
                   />
                 </div>
                 <div className="space-y-2">
@@ -122,6 +145,7 @@ export const Hero = () => {
                     onChange={(e) => setSelectedModel(e.target.value)}
                     disabled={!selectedBrand}
                     required
+                    className="!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300 disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -134,6 +158,7 @@ export const Hero = () => {
                   value={selectedService}
                   onChange={(e) => setSelectedService(e.target.value)}
                   required
+                  className="!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300"
                 />
               </div>
 
@@ -146,12 +171,14 @@ export const Hero = () => {
                   <input
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="888 888 8888"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setPhone(val);
+                    }}
+                    placeholder="Enter 10-digit number"
                     pattern="[0-9]{10}"
-                    maxLength={10}
                     required
-                    className="input-premium pl-14"
+                    className="input-premium !pl-16"
                   />
                 </div>
               </div>

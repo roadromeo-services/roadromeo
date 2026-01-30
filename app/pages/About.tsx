@@ -1,5 +1,5 @@
 import { Target, Eye, Users, Award } from 'lucide-react';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 export const About = () => {
   return (

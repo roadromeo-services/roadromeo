@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { CheckCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Button, Card } from '@/components/common';
 import { getServiceBySlug, services } from '@/lib/data/services';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 
 export const ServiceDetail = () => {
   const params = useParams();

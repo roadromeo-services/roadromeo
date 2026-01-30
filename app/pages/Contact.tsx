@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { Button, Input, Select } from '@/components/common';
-import { siteConfig } from '@/config/site';
+import { siteConfig } from '@/lib/config/site';
 import { bikeBrands, getModelsByBrand } from '@/lib/data/bikes';
 import { services } from '@/lib/data/services';
 

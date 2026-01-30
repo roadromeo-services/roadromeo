@@ -1,19 +1,22 @@
 export const siteConfig = {
-  name: 'Road Romeo Services',
+  name: process.env.NEXT_PUBLIC_SITE_NAME || 'Road Romeo Services',
   tagline: 'Best Bike Service in Pune',
-  description: 'Two-wheeler servicing & repair in Pune with FREE pickup & drop. Oil change, repairs, ceramic coating & more.',
-  url: 'https://www.roadromeo.in',
+  description:
+    'Two-wheeler servicing & repair in Pune with FREE pickup & drop. Oil change, repairs, ceramic coating & more.',
+  url: process.env.NEXT_PUBLIC_SITE_URL,
+
+  theme: process.env.NEXT_PUBLIC_THEME || 'orange-blue',
 
   contact: {
-    phone: '9730963184',
-    whatsapp: '919730963184',
-    email: 'contact@roadromeo.in',
-    address: 'Pune, Maharashtra, India',
+    phone: process.env.NEXT_PUBLIC_PHONE,
+    whatsapp: process.env.NEXT_PUBLIC_WHATSAPP,
+    email: process.env.NEXT_PUBLIC_EMAIL,
+    address: process.env.NEXT_PUBLIC_ADDRESS,
   },
 
   social: {
-    facebook: 'https://facebook.com/roadromeoservices',
-    instagram: 'https://instagram.com/roadromeo',
+    facebook: process.env.NEXT_PUBLIC_FACEBOOK_URL,
+    instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL,
   },
 
   businessHours: {
@@ -29,8 +32,7 @@ export const siteConfig = {
     warrantyDays: 10,
   },
 
-  // Elfsight Widget ID - Replace with your actual widget ID from Elfsight
-  elfsightWidgetId: 'YOUR_ELFSIGHT_WIDGET_ID',
+  elfsightWidgetId: process.env.NEXT_PUBLIC_ELFSIGHT_WIDGET_ID,
 };
 
 export type SiteConfig = typeof siteConfig;
