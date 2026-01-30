@@ -1,4 +1,4 @@
-import { bikeBrands } from '@/data/bikes';
+import { bikeBrands } from '@/lib/data/bikes';
 
 export const BrandsServed = () => {
   return (

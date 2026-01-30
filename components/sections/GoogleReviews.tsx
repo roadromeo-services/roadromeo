@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect } from 'react';
 import { Star, ExternalLink } from 'lucide-react';
 import { siteConfig } from '@/config/site';
@@ -36,8 +38,8 @@ export const GoogleReviews = () => {
                 <Star
                   key={i}
                   className={`w-7 h-7 ${i < Math.round(siteConfig.stats.rating)
-                      ? 'text-yellow-400 fill-yellow-400'
-                      : 'text-gray-300'
+                    ? 'text-yellow-400 fill-yellow-400'
+                    : 'text-gray-300'
                     }`}
                 />
               ))}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram } from 'lucide-react';
 import { siteConfig } from '@/config/site';
-import { areasServed } from '@/data/areas';
+import { areasServed } from '@/lib/data/areas';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();

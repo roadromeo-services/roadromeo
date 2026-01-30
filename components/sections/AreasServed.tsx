@@ -1,5 +1,5 @@
 import { MapPin } from 'lucide-react';
-import { areasServed } from '@/data/areas';
+import { areasServed } from '@/lib/data/areas';
 
 export const AreasServed = () => {
   return (

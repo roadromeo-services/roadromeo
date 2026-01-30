@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Badge, Button } from '@/components/common';
-import { services } from '@/data/services';
+import { services } from '@/lib/data/services';
 
 export const ServicesGrid = () => {
   return (

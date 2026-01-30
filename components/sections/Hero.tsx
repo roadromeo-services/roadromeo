@@ -1,9 +1,10 @@
+'use client';
 import { useState } from 'react';
 import { Bike, CheckCircle, Smartphone, ShieldCheck, MapPin } from 'lucide-react';
 import { Button, Select } from '@/components/common';
 import { siteConfig } from '@/config/site';
-import { bikeBrands, getModelsByBrand } from '@/data/bikes';
-import { services } from '@/data/services';
+import { bikeBrands, getModelsByBrand } from '@/lib/data/bikes';
+import { services } from '@/lib/data/services';
 
 export const Hero = () => {
   const [selectedBrand, setSelectedBrand] = useState('');
@@ -28,26 +29,8 @@ export const Hero = () => {
     label: service.name,
   }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Save to MongoDB
-    try {
-      await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'Contacted from Hero',
-          phone,
-          brand: selectedBrand,
-          model: selectedModel,
-          service: selectedService,
-        }),
-      });
-    } catch (error) {
-      console.error('Failed to save booking:', error);
-    }
-
     const message = `Hi! I want to book a bike service.\n\nBike: ${selectedBrand} ${selectedModel}\nService: ${selectedService}\nPhone: ${phone}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
     window.open(whatsappLink, '_blank');

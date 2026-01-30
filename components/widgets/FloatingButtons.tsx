@@ -1,15 +1,14 @@
-import config from '@/lib/config';
 import { Phone, MessageCircle } from 'lucide-react';
-
+import { siteConfig } from '@/config/site';
 
 export const FloatingButtons = () => {
-  const whatsappLink = `https://wa.me/${config.WHATSAPP}?text=Hi! I want to book a bike service.`;
+  const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=Hi! I want to book a bike service.`;
 
   return (
     <div className="floating-buttons">
       {/* Call Button */}
       <a
-        href={`tel:${config.PHONE}`}
+        href={`tel:${siteConfig.contact.phone}`}
         className="call-btn"
         aria-label="Call us"
         title="Call us"
