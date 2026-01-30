@@ -1,0 +1,9 @@
+export { Hero } from './Hero';
+export { TrustBadges } from './TrustBadges';
+export { ServicesGrid } from './ServicesGrid';
+export { HowItWorks } from './HowItWorks';
+export { WhyChooseUs } from './WhyChooseUs';
+export { GoogleReviews } from './GoogleReviews';
+export { BrandsServed } from './BrandsServed';
+export { AreasServed } from './AreasServed';
+export { CTASection } from './CTASection';
