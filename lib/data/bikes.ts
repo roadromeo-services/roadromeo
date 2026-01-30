@@ -1,21 +1,20 @@
-import BajajLogo from '@/assets/bikes/bajaj.svg?react';
-import HeroLogo from '@/assets/bikes/hero.svg?react';
-import HondaLogo from '@/assets/bikes/honda.svg?react';
-import TvsLogo from '@/assets/bikes/tvs.svg?react';
-import YamahaLogo from '@/assets/bikes/yamaha.svg?react';
-import RoyalEnfieldLogo from '@/assets/bikes/royalenfield.svg?react';
-import KtmLogo from '@/assets/bikes/ktm.svg?react';
-import SuzukiLogo from '@/assets/bikes/suzuki.svg?react';
-import VespaLogo from '@/assets/bikes/vespa.svg?react';
-import KawasakiLogo from '@/assets/bikes/kawasaki.svg?react';
-import TriumphLogo from '@/assets/bikes/triumph.svg?react';
-import BmwLogo from '@/assets/bikes/bmw.svg?react';
-import type { FC, SVGProps } from 'react';
+import BajajLogo from '@/assets/bikes/bajaj.svg';
+import HeroLogo from '@/assets/bikes/hero.svg';
+import HondaLogo from '@/assets/bikes/honda.svg';
+import TvsLogo from '@/assets/bikes/tvs.svg';
+import YamahaLogo from '@/assets/bikes/yamaha.svg';
+import RoyalEnfieldLogo from '@/assets/bikes/royalenfield.svg';
+import KtmLogo from '@/assets/bikes/ktm.svg';
+import SuzukiLogo from '@/assets/bikes/suzuki.svg';
+import VespaLogo from '@/assets/bikes/vespa.svg';
+import KawasakiLogo from '@/assets/bikes/kawasaki.svg';
+import TriumphLogo from '@/assets/bikes/triumph.svg';
+import BmwLogo from '@/assets/bikes/bmw.svg';
 
 export interface BikeBrand {
   id: string;
   name: string;
-  logo?: FC<SVGProps<SVGSVGElement>>;
+  logo?: any;
   models: string[];
 }
 

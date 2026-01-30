@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { bikeBrands } from '@/lib/data/bikes';
 
 export const BrandsServed = () => {
@@ -31,7 +32,13 @@ export const BrandsServed = () => {
 
                 <div className="relative z-10 w-full h-full flex items-center justify-center transition-all duration-500 group-hover:scale-125">
                   {brand.logo ? (
-                    <brand.logo className="w-full h-full object-contain" />
+                    <Image
+                      src={brand.logo}
+                      alt={brand.name}
+                      className="w-full h-full object-contain"
+                      width={100}
+                      height={100}
+                    />
                   ) : (
                     <span className="text-4xl font-black text-primary transition-colors">
                       {brand.name.charAt(0)}
