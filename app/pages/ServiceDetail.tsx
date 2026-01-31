@@ -5,29 +5,68 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { CheckCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Button, Card } from '@/components/common';
-import { getServiceBySlug, services } from '@/lib/data/services';
 import { siteConfig } from '@/lib/config/site';
+import { getIcon } from '@/lib/icons';
+import { useState } from 'react';
+
+import { useData } from '@/components/providers/DataProvider';
 
 export const ServiceDetail = () => {
   const params = useParams();
   const slug = params?.slug as string;
   const router = useRouter();
-  const service = slug ? getServiceBySlug(slug) : null;
+  const { services, loading, addBooking } = useData();
+
+  const [userName, setUserName] = useState('');
+  const [userPhone, setUserPhone] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
+
+  const service = slug ? services.find(s => s.slug === slug) : null;
 
   useEffect(() => {
-    if (!service) {
+    if (!loading && !service) {
       router.replace('/services');
     }
-  }, [service, router]);
+  }, [service, router, loading]);
 
-  if (!service) return null;
+  if (loading || !service) return null;
 
-  const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=Hi! I want to book ${service.name} for my bike.`;
-  const otherServices = services.filter(s => s.id !== service.id).slice(0, 3);
+  const Icon = getIcon(service.icon);
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsBooking(true);
+
+    try {
+      await addBooking({
+        customerName: userName,
+        phoneNumber: userPhone,
+        bikeBrand: 'Unknown',
+        bikeModel: 'Specified in detail',
+        serviceType: service.name,
+        bookingDate: new Date(),
+        totalAmount: service.price,
+        status: 'pending',
+        notes: `Booked from ${service.name} detail page`
+      });
+
+      const whatsappMessage = `Hi! I want to book ${service.name} for my bike.\n\nName: ${userName}\nPhone: ${userPhone}`;
+      const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
+      window.open(whatsappLink, '_blank');
+
+      setUserName('');
+      setUserPhone('');
+    } catch (err) {
+      console.error('Booking failed:', err);
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const otherServices = services.filter(s => s._id !== service._id).slice(0, 3);
 
   return (
     <>
-      {/* Breadcrumb */}
       <div className="bg-bg-secondary py-4">
         <div className="container">
           <Link href="/services" className="inline-flex items-center gap-2 text-primary hover:underline">
@@ -37,15 +76,13 @@ export const ServiceDetail = () => {
         </div>
       </div>
 
-      {/* Service Detail */}
       <section className="py-12 md:py-16">
         <div className="container">
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <service.icon className="w-8 h-8 text-primary" />
+                  <Icon className="w-8 h-8 text-primary" />
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-text-primary">
@@ -72,7 +109,7 @@ export const ServiceDetail = () => {
                   What's Included
                 </h2>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  {service.features.map((feature, idx) => (
+                  {service.features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
                       <span className="text-text-primary">{feature}</span>
@@ -106,62 +143,76 @@ export const ServiceDetail = () => {
               </div>
             </div>
 
-            {/* Sidebar - Booking Card */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24">
-                <h3 className="text-xl font-bold text-text-primary mb-4">
-                  Book This Service
-                </h3>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-3 border-b">
-                    <span className="text-text-secondary">Service</span>
-                    <span className="font-semibold text-text-primary">{service.name}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 border-b">
-                    <span className="text-text-secondary">Duration</span>
-                    <span className="font-semibold text-text-primary">{service.duration}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 border-b">
-                    <span className="text-text-secondary">Starting Price</span>
-                    <span className="font-bold text-accent text-xl">₹{service.price}</span>
-                  </div>
+              <Card className="sticky top-24 overflow-hidden">
+                <div className="bg-primary/10 p-4 border-b border-primary/10">
+                  <h3 className="text-xl font-bold text-text-primary text-center">
+                    Quick Booking
+                  </h3>
                 </div>
 
-                <div className="mt-6 space-y-3">
-                  <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="block">
-                    <Button fullWidth size="lg">
-                      Book on WhatsApp
-                    </Button>
-                  </a>
-                  <a href={`tel:${siteConfig.contact.phone}`} className="block">
-                    <Button variant="outline" fullWidth>
-                      Call to Book
-                    </Button>
-                  </a>
-                </div>
+                <div className="p-6">
+                  <form onSubmit={handleBookingSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold text-text-secondary mb-1">Your Name</label>
+                      <input
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors"
+                        placeholder="e.g. Rahul Kumar"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-text-secondary mb-1">Phone Number</label>
+                      <input
+                        value={userPhone}
+                        onChange={(e) => setUserPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        type="tel"
+                        required
+                        pattern="[0-9]{10}"
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors"
+                        placeholder="10-digit mobile number"
+                      />
+                    </div>
 
-                <p className="text-center text-sm text-text-secondary mt-4">
-                  Free pickup & drop included
-                </p>
+                    <div className="pt-2">
+                      <Button
+                        type="submit"
+                        fullWidth
+                        size="lg"
+                        className="shadow-lg shadow-primary/20"
+                        disabled={isBooking}
+                      >
+                        {isBooking ? 'Processing...' : 'Book Now'}
+                      </Button>
+                    </div>
+                  </form>
+
+                  <p className="text-center text-xs text-text-secondary mt-4">
+                    Free pickup & drop included
+                  </p>
+                </div>
               </Card>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Other Services */}
       <section className="py-12 bg-bg-secondary">
         <div className="container">
           <h2 className="text-2xl font-bold text-text-primary mb-6">
             Other Services You Might Like
           </h2>
           <div className="grid sm:grid-cols-3 gap-6">
-            {otherServices.map((s) => (
-              <Link key={s.id} href={`/services/${s.slug}`}>
+            {otherServices.map((s: any) => (
+              <Link key={s._id} href={`/services/${s.slug}`}>
                 <Card className="h-full hover:border-primary transition-colors">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <s.icon className="w-6 h-6 text-primary" />
+                    {(() => {
+                      const OtherIcon = getIcon(s.icon);
+                      return <OtherIcon className="w-6 h-6 text-primary" />;
+                    })()}
                   </div>
                   <h3 className="font-bold text-text-primary mb-2">{s.name}</h3>
                   <p className="text-sm text-text-secondary mb-3">{s.shortDescription}</p>

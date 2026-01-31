@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { Bike, CheckCircle, Smartphone, ShieldCheck, MapPin, User } from 'lucide-react';
 import { Button, Select } from '@/components/common';
 import { siteConfig } from '@/lib/config/site';
-import { bikeBrands, getModelsByBrand } from '@/lib/data/bikes';
-import { services } from '@/lib/data/services';
+import { useEffect } from 'react';
+
+import { useData } from '@/components/providers/DataProvider';
 
 export const Hero = () => {
   const [name, setName] = useState('');
@@ -13,27 +14,49 @@ export const Hero = () => {
   const [selectedService, setSelectedService] = useState('');
   const [phone, setPhone] = useState('');
 
+  const { bikes: bikeBrands, services, addBooking } = useData();
+
   const brandOptions = bikeBrands.map(brand => ({
-    value: brand.id,
+    value: brand._id,
     label: brand.name,
   }));
 
   const modelOptions = selectedBrand
-    ? getModelsByBrand(selectedBrand).map(model => ({
+    ? (bikeBrands.find(b => (b._id) === selectedBrand)?.models || []).map((model: string) => ({
       value: model,
       label: model,
     }))
     : [];
 
   const serviceOptions = services.map(service => ({
-    value: service.id,
+    value: service._id,
     label: service.name,
   }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const brandName = bikeBrands.find(b => b.id === selectedBrand)?.name || selectedBrand;
-    const serviceName = services.find(s => s.id === selectedService)?.name || selectedService;
+    const brandObj = bikeBrands.find(b => (b._id) === selectedBrand);
+    const serviceObj = services.find(s => (s._id) === selectedService);
+
+    const brandName = brandObj?.name || selectedBrand;
+    const serviceName = serviceObj?.name || selectedService;
+
+    // Save to database
+    try {
+      await addBooking({
+        customerName: name,
+        phoneNumber: phone,
+        bikeBrand: brandName,
+        bikeModel: selectedModel,
+        serviceType: serviceName,
+        bookingDate: new Date(),
+        totalAmount: serviceObj?.price || 0,
+        status: 'pending',
+        notes: 'Booked from Hero section'
+      });
+    } catch (err) {
+      console.error('Database booking failed, but proceeding to WhatsApp:', err);
+    }
 
     const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}%0AService: ${serviceName}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${message}`;

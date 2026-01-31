@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { Button, Input, Select } from '@/components/common';
 import { siteConfig } from '@/lib/config/site';
-import { bikeBrands, getModelsByBrand } from '@/lib/data/bikes';
-import { services } from '@/lib/data/services';
+import { useData } from '@/components/providers/DataProvider';
 
 export const Contact = () => {
+  const { bikes: bikeBrands, services, addBooking } = useData();
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedService, setSelectedService] = useState('');
@@ -15,25 +15,48 @@ export const Contact = () => {
   const [message, setMessage] = useState('');
 
   const brandOptions = bikeBrands.map(brand => ({
-    value: brand.id,
+    value: brand._id,
     label: brand.name,
   }));
 
   const modelOptions = selectedBrand
-    ? getModelsByBrand(selectedBrand).map(model => ({
+    ? (bikeBrands.find(b => b._id === selectedBrand)?.models || []).map((model: string) => ({
       value: model,
       label: model,
     }))
     : [];
 
   const serviceOptions = services.map(service => ({
-    value: service.id,
+    value: service._id,
     label: service.name,
   }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const whatsappMessage = `Hi! I want to book a service.\n\nName: ${name}\nPhone: ${phone}\nBike: ${selectedBrand} ${selectedModel}\nService: ${selectedService}\nMessage: ${message}`;
+    const brandObj = bikeBrands.find(b => b._id === selectedBrand);
+    const serviceObj = services.find(s => s._id === selectedService);
+
+    const brandName = brandObj?.name || selectedBrand;
+    const serviceName = serviceObj?.name || selectedService;
+
+    // Save to database
+    try {
+      await addBooking({
+        customerName: name,
+        phoneNumber: phone,
+        bikeBrand: brandName,
+        bikeModel: selectedModel,
+        serviceType: serviceName,
+        bookingDate: new Date(),
+        totalAmount: serviceObj?.price || 0,
+        status: 'pending',
+        notes: message || 'Booked from Contact page'
+      });
+    } catch (err) {
+      console.error('Database booking failed, but proceeding to WhatsApp:', err);
+    }
+
+    const whatsappMessage = `Hi! I want to book a service.\n\nName: ${name}\nPhone: ${phone}\nBike: ${brandName} ${selectedModel}\nService: ${serviceName}\nMessage: ${message}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
     window.open(whatsappLink, '_blank');
   };
