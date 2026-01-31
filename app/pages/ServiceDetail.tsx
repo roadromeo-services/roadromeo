@@ -5,25 +5,31 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 import { CheckCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Button, Card } from '@/components/common';
-import { getServiceBySlug, services } from '@/lib/data/services';
 import { siteConfig } from '@/lib/config/site';
+import { getIcon } from '@/lib/icons';
+import { useState } from 'react';
+
+import { useData } from '@/components/providers/DataProvider';
 
 export const ServiceDetail = () => {
   const params = useParams();
   const slug = params?.slug as string;
   const router = useRouter();
-  const service = slug ? getServiceBySlug(slug) : null;
+  const { services, loading } = useData();
+
+  const service = slug ? services.find(s => s.slug === slug) : null;
 
   useEffect(() => {
-    if (!service) {
+    if (!loading && !service) {
       router.replace('/services');
     }
-  }, [service, router]);
+  }, [service, router, loading]);
 
-  if (!service) return null;
+  if (loading || !service) return null;
 
+  const Icon = getIcon(service.icon);
   const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=Hi! I want to book ${service.name} for my bike.`;
-  const otherServices = services.filter(s => s.id !== service.id).slice(0, 3);
+  const otherServices = services.filter(s => s._id !== service._id).slice(0, 3);
 
   return (
     <>
@@ -45,7 +51,7 @@ export const ServiceDetail = () => {
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <service.icon className="w-8 h-8 text-primary" />
+                  <Icon className="w-8 h-8 text-primary" />
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-text-primary">
@@ -72,7 +78,7 @@ export const ServiceDetail = () => {
                   What's Included
                 </h2>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  {service.features.map((feature, idx) => (
+                  {service.features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
                       <span className="text-text-primary">{feature}</span>
@@ -157,11 +163,14 @@ export const ServiceDetail = () => {
             Other Services You Might Like
           </h2>
           <div className="grid sm:grid-cols-3 gap-6">
-            {otherServices.map((s) => (
-              <Link key={s.id} href={`/services/${s.slug}`}>
+            {otherServices.map((s: any) => (
+              <Link key={s._id} href={`/services/${s.slug}`}>
                 <Card className="h-full hover:border-primary transition-colors">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <s.icon className="w-6 h-6 text-primary" />
+                    {(() => {
+                      const OtherIcon = getIcon(s.icon);
+                      return <OtherIcon className="w-6 h-6 text-primary" />;
+                    })()}
                   </div>
                   <h3 className="font-bold text-text-primary mb-2">{s.name}</h3>
                   <p className="text-sm text-text-secondary mb-3">{s.shortDescription}</p>

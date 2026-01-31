@@ -1,11 +1,23 @@
-import { CheckCircle } from 'lucide-react';
+'use client';
+
+import { CheckCircle, Loader2 } from 'lucide-react';
 import { Card, Badge, Button } from '@/components/common';
-import { pricingPackages } from '@/lib/data/pricing';
 import { siteConfig } from '@/lib/config/site';
+import { useData } from '@/components/providers/DataProvider';
 
 export const Pricing = () => {
+  const { pricing: pricingPackages, loading } = useData();
+
   const whatsappLink = (packageName: string) =>
     `https://wa.me/${siteConfig.contact.whatsapp}?text=Hi! I want to book the ${packageName} package.`;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-32 bg-zinc-950">
+        <Loader2 className="w-10 h-10 animate-spin text-red-600" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -28,9 +40,9 @@ export const Pricing = () => {
       <section className="py-16 md:py-20">
         <div className="container">
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPackages.map((pkg) => (
+            {pricingPackages.map((pkg: any) => (
               <Card
-                key={pkg.id}
+                key={pkg._id ? pkg._id.toString() : pkg.id}
                 className={`relative flex flex-col ${pkg.popular ? 'ring-2 ring-accent shadow-xl scale-105' : ''
                   }`}
               >
@@ -55,7 +67,7 @@ export const Pricing = () => {
 
                 <div className="flex-1">
                   <ul className="space-y-3 mb-6">
-                    {pkg.features.map((feature, idx) => (
+                    {pkg.features.map((feature: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
                         <span className="text-text-secondary">{feature}</span>

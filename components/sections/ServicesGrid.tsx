@@ -1,9 +1,16 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Badge, Button } from '@/components/common';
-import { services } from '@/lib/data/services';
+import connectDB from '@/lib/mongodb';
+import Service from '@/models/Service';
+import { getIcon } from '@/lib/icons';
 
-export const ServicesGrid = () => {
+export const ServicesGrid = async () => {
+  await connectDB();
+  const services = await Service.find({}).lean();
+
+  // If no services in DB, use static as fallback
+  // if (services.length === 0) { ... }
   return (
     <section className="section-padding bg-slate-50 relative overflow-hidden">
       {/* Background Decoration */}
@@ -28,41 +35,44 @@ export const ServicesGrid = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {services.map((service) => (
-            <div key={service.id} className="card-premium flex flex-col group">
-              <div className="flex items-start justify-between mb-8">
-                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
-                  <service.icon className="w-10 h-10 transition-transform duration-500 group-hover:scale-110" />
-                </div>
-                {service.popular && (
-                  <Badge className="bg-primary/10 text-primary border-none font-bold py-1.5 px-4 rounded-full">
-                    Popular
-                  </Badge>
-                )}
-              </div>
-
-              <h3 className="text-3xl font-black text-slate-900 mb-4 group-hover:text-primary transition-colors">
-                {service.name}
-              </h3>
-
-              <p className="text-lg text-slate-500 mb-10 flex-1 leading-relaxed">
-                {service.shortDescription}
-              </p>
-
-              <div className="flex items-center justify-between pt-8 border-t border-slate-100">
-                <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Starting at</span>
-                  <p className="text-3xl font-black text-slate-900 italic">₹{service.price}</p>
-                </div>
-
-                <Link href={`/services/${service.slug}`}>
-                  <div className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-primary hover:scale-110 transition-all cursor-pointer shadow-lg shadow-slate-200">
-                    <ArrowRight className="w-7 h-7" />
+          {services.map((service: any) => {
+            const Icon = getIcon(service.icon);
+            return (
+              <div key={service._id ? service._id.toString() : service.id} className="card-premium flex flex-col group">
+                <div className="flex items-start justify-between mb-8">
+                  <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                    <Icon className="w-10 h-10 transition-transform duration-500 group-hover:scale-110" />
                   </div>
-                </Link>
+                  {service.popular && (
+                    <Badge className="bg-primary/10 text-primary border-none font-bold py-1.5 px-4 rounded-full">
+                      Popular
+                    </Badge>
+                  )}
+                </div>
+
+                <h3 className="text-3xl font-black text-slate-900 mb-4 group-hover:text-primary transition-colors">
+                  {service.name}
+                </h3>
+
+                <p className="text-lg text-slate-500 mb-10 flex-1 leading-relaxed">
+                  {service.shortDescription}
+                </p>
+
+                <div className="flex items-center justify-between pt-8 border-t border-slate-100">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Starting at</span>
+                    <p className="text-3xl font-black text-slate-900 italic">₹{service.price}</p>
+                  </div>
+
+                  <Link href={`/services/${service.slug}`}>
+                    <div className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-primary hover:scale-110 transition-all cursor-pointer shadow-lg shadow-slate-200">
+                      <ArrowRight className="w-7 h-7" />
+                    </div>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-16 md:hidden">

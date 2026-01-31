@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { Bike, CheckCircle, Smartphone, ShieldCheck, MapPin, User } from 'lucide-react';
 import { Button, Select } from '@/components/common';
 import { siteConfig } from '@/lib/config/site';
-import { bikeBrands, getModelsByBrand } from '@/lib/data/bikes';
-import { services } from '@/lib/data/services';
+import { useEffect } from 'react';
 
 export const Hero = () => {
   const [name, setName] = useState('');
@@ -12,28 +11,35 @@ export const Hero = () => {
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedService, setSelectedService] = useState('');
   const [phone, setPhone] = useState('');
+  const [bikeBrands, setBikeBrands] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/bikes').then(res => res.json()).then(data => setBikeBrands(data));
+    fetch('/api/services').then(res => res.json()).then(data => setServices(data));
+  }, []);
 
   const brandOptions = bikeBrands.map(brand => ({
-    value: brand.id,
+    value: brand._id || brand.id,
     label: brand.name,
   }));
 
   const modelOptions = selectedBrand
-    ? getModelsByBrand(selectedBrand).map(model => ({
+    ? (bikeBrands.find(b => (b._id || b.id) === selectedBrand)?.models || []).map((model: string) => ({
       value: model,
       label: model,
     }))
     : [];
 
   const serviceOptions = services.map(service => ({
-    value: service.id,
+    value: service._id || service.id,
     label: service.name,
   }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const brandName = bikeBrands.find(b => b.id === selectedBrand)?.name || selectedBrand;
-    const serviceName = services.find(s => s.id === selectedService)?.name || selectedService;
+    const brandName = bikeBrands.find(b => (b._id || b.id) === selectedBrand)?.name || selectedBrand;
+    const serviceName = services.find(s => (s._id || s.id) === selectedService)?.name || selectedService;
 
     const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}%0AService: ${serviceName}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${message}`;
