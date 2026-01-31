@@ -75,6 +75,11 @@ interface DataState {
 interface DataContextType extends DataState {
     refreshData: () => Promise<void>;
     addBooking: (bookingData: any) => Promise<any>;
+    updateBooking: (id: string, data: any) => Promise<any>;
+    deleteBooking: (id: string) => Promise<void>;
+    createBilling: (billingData: any) => Promise<any>;
+    updateBilling: (id: string, data: any) => Promise<any>;
+    deleteBilling: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -135,17 +140,85 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookingData),
             });
-
             if (!res.ok) throw new Error('Failed to create booking');
-
             const newBooking = await res.json();
-
-            // Refresh bookings list
             fetchData();
-
             return newBooking;
         } catch (err) {
             console.error('Error adding booking:', err);
+            throw err;
+        }
+    };
+
+    const updateBooking = async (id: string, data: any) => {
+        try {
+            const res = await fetch(`/api/bookings/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to update booking');
+            const updated = await res.json();
+            fetchData();
+            return updated;
+        } catch (err) {
+            console.error('Error updating booking:', err);
+            throw err;
+        }
+    };
+
+    const deleteBooking = async (id: string) => {
+        try {
+            const res = await fetch(`/api/bookings/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete booking');
+            fetchData();
+        } catch (err) {
+            console.error('Error deleting booking:', err);
+            throw err;
+        }
+    };
+
+    const createBilling = async (billingData: any) => {
+        try {
+            const res = await fetch('/api/billing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(billingData),
+            });
+            if (!res.ok) throw new Error('Failed to create billing');
+            const newBilling = await res.json();
+            fetchData();
+            return newBilling;
+        } catch (err) {
+            console.error('Error adding billing:', err);
+            throw err;
+        }
+    };
+
+    const updateBilling = async (id: string, data: any) => {
+        try {
+            const res = await fetch(`/api/billing/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to update billing');
+            const updated = await res.json();
+            fetchData();
+            return updated;
+        } catch (err) {
+            console.error('Error updating billing:', err);
+            throw err;
+        }
+    };
+
+    const deleteBilling = async (id: string) => {
+        try {
+            const res = await fetch(`/api/billing/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete billing');
+            fetchData();
+        } catch (err) {
+            console.error('Error deleting billing:', err);
             throw err;
         }
     };
@@ -159,7 +232,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             value={{
                 ...state,
                 refreshData: fetchData,
-                addBooking
+                addBooking,
+                updateBooking,
+                deleteBooking,
+                createBilling,
+                updateBilling,
+                deleteBilling
             }}
         >
             {children}
