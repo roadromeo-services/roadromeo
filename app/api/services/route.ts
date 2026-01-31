@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 
 export async function GET() {
     await connectDB();
-    const services = await Service.find({}).sort({ createdAt: -1 });
+    const services = await Service.find({}).sort({ createdAt: 1 });
     return NextResponse.json(services);
 }
 

@@ -1,13 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Save, X, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Pencil, Trash2, Save, X, Loader2, Search, ChevronDown } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { useData } from '@/components/providers/DataProvider';
+import { getIcon } from '@/lib/icons';
+
+// Curated icons relevant to bike/auto services, shown first
+const SUGGESTED_ICONS = [
+    'Wrench', 'Cog', 'Settings', 'Fuel', 'Droplets', 'Zap', 'Shield', 'ShieldCheck',
+    'Sparkles', 'Star', 'Paintbrush', 'Disc', 'CircleDot', 'Battery', 'BatteryCharging',
+    'Gauge', 'Bike', 'Car', 'Timer', 'Clock', 'CheckCircle', 'Award', 'BadgeCheck',
+    'Hammer', 'ScanLine', 'Thermometer', 'Wind', 'Layers', 'Package', 'Tag',
+];
+
+// Get all valid icon names from lucide-react (components are PascalCase functions)
+const ALL_ICON_NAMES = Object.keys(LucideIcons).filter(
+    (key) => typeof (LucideIcons as any)[key] === 'object' && key[0] === key[0].toUpperCase() && key !== 'default' && !key.startsWith('create') && !key.startsWith('Icon')
+);
 
 export default function ServicesManagement() {
     const { services, loading, refreshData } = useData();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
+    const [iconPickerOpen, setIconPickerOpen] = useState(false);
+    const [iconSearch, setIconSearch] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         slug: '',
@@ -18,6 +35,12 @@ export default function ServicesManagement() {
         icon: 'Wrench',
         popular: false
     });
+
+    const filteredIcons = useMemo(() => {
+        const query = iconSearch.toLowerCase();
+        if (!query) return SUGGESTED_ICONS;
+        return ALL_ICON_NAMES.filter((name) => name.toLowerCase().includes(query)).slice(0, 60);
+    }, [iconSearch]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -128,6 +151,62 @@ export default function ServicesManagement() {
                                 className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 h-32 focus:border-red-600 outline-none transition-colors resize-none"
                             />
                         </div>
+                        {/* Icon Picker */}
+                        <div className="md:col-span-2 space-y-2">
+                            <label className="text-sm font-medium text-zinc-500">Service Icon</label>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setIconPickerOpen(!iconPickerOpen)}
+                                    className="w-full flex items-center justify-between bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 hover:border-red-600 outline-none transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {(() => { const Icon = getIcon(formData.icon); return <Icon className="w-5 h-5 text-red-600" />; })()}
+                                        <span className="font-medium">{formData.icon}</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${iconPickerOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {iconPickerOpen && (
+                                    <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-2xl shadow-2xl p-4 max-h-80 overflow-hidden flex flex-col">
+                                        <div className="relative mb-3">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search icons..."
+                                                value={iconSearch}
+                                                onChange={(e) => setIconSearch(e.target.value)}
+                                                className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-lg outline-none focus:border-red-600 text-sm transition-colors"
+                                            />
+                                        </div>
+                                        <div className="overflow-y-auto grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
+                                            {filteredIcons.map((name) => {
+                                                const Icon = getIcon(name);
+                                                return (
+                                                    <button
+                                                        key={name}
+                                                        type="button"
+                                                        title={name}
+                                                        onClick={() => {
+                                                            setFormData({ ...formData, icon: name });
+                                                            setIconPickerOpen(false);
+                                                            setIconSearch('');
+                                                        }}
+                                                        className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all hover:bg-red-50 hover:text-red-600 ${formData.icon === name ? 'bg-red-600 text-white hover:bg-red-700 hover:text-white' : 'text-zinc-600'}`}
+                                                    >
+                                                        <Icon className="w-5 h-5" />
+                                                    </button>
+                                                );
+                                            })}
+                                            {filteredIcons.length === 0 && (
+                                                <p className="col-span-full text-center text-zinc-400 text-sm py-4">No icons found</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="flex items-center gap-3">
                             <input
                                 type="checkbox"
@@ -165,35 +244,41 @@ export default function ServicesManagement() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {services.map((service) => (
-                        <div key={service._id} className="p-6 rounded-2xl bg-white border border-zinc-200 hover:border-red-600 hover:shadow-xl transition-all group relative">
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                    onClick={() => {
-                                        setEditingId(service._id);
-                                        setFormData(service);
-                                        setIsAdding(false);
-                                    }}
-                                    className="p-2 bg-zinc-100 hover:bg-blue-600 hover:text-white text-zinc-600 rounded-lg transition-colors"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => deleteService(service._id)}
-                                    className="p-2 bg-zinc-100 hover:bg-red-600 hover:text-white text-zinc-600 rounded-lg transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                    {services.map((service) => {
+                        const ServiceIcon = getIcon(service.icon);
+                        return (
+                            <div key={service._id} className="p-6 rounded-2xl bg-white border border-zinc-200 hover:border-red-600 hover:shadow-xl transition-all group relative">
+                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => {
+                                            setEditingId(service._id);
+                                            setFormData(service);
+                                            setIsAdding(false);
+                                        }}
+                                        className="p-2 bg-zinc-100 hover:bg-blue-600 hover:text-white text-zinc-600 rounded-lg transition-colors"
+                                    >
+                                        <Pencil className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteService(service._id)}
+                                        className="p-2 bg-zinc-100 hover:bg-red-600 hover:text-white text-zinc-600 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4">
+                                    <ServiceIcon className="w-6 h-6 text-red-600" />
+                                </div>
+                                <h4 className="text-xl font-bold mb-1 text-zinc-900">{service.name}</h4>
+                                <p className="text-red-600 font-bold mb-4">₹{service.price}</p>
+                                <p className="text-zinc-500 text-sm line-clamp-2">{service.description}</p>
+                                <div className="mt-6 flex items-center gap-4 text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                                    <span>{service.duration}</span>
+                                    {service.popular && <span className="text-orange-500">Popular</span>}
+                                </div>
                             </div>
-                            <h4 className="text-xl font-bold mb-1 text-zinc-900">{service.name}</h4>
-                            <p className="text-red-600 font-bold mb-4">₹{service.price}</p>
-                            <p className="text-zinc-500 text-sm line-clamp-2">{service.description}</p>
-                            <div className="mt-6 flex items-center gap-4 text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                                <span>{service.duration}</span>
-                                {service.popular && <span className="text-orange-500">Popular</span>}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
