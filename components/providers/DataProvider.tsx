@@ -32,16 +32,49 @@ interface BikeBrand {
     models: string[];
 }
 
+interface Booking {
+    _id: string;
+    customerName: string;
+    phoneNumber: string;
+    email?: string;
+    bikeBrand: string;
+    bikeModel: string;
+    serviceType: string;
+    bookingDate: string;
+    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+    totalAmount: number;
+    notes?: string;
+}
+
+interface Billing {
+    _id: string;
+    bookingId: string | any;
+    invoiceNumber: string;
+    items: {
+        description: string;
+        quantity: number;
+        price: number;
+    }[];
+    tax: number;
+    discount: number;
+    totalAmount: number;
+    paymentStatus: 'pending' | 'paid' | 'failed';
+    paymentMethod?: string;
+}
+
 interface DataState {
     services: Service[];
     pricing: PricingPackage[];
     bikes: BikeBrand[];
+    bookings: Booking[];
+    billing: Billing[];
     loading: boolean;
     error: string | null;
 }
 
 interface DataContextType extends DataState {
     refreshData: () => Promise<void>;
+    addBooking: (bookingData: any) => Promise<any>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -51,6 +84,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         services: [],
         pricing: [],
         bikes: [],
+        bookings: [],
+        billing: [],
         loading: true,
         error: null,
     });
@@ -59,26 +94,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         try {
             setState(prev => ({ ...prev, loading: true, error: null }));
 
-            const [servicesRes, pricingRes, bikesRes] = await Promise.all([
+            const [servicesRes, pricingRes, bikesRes, bookingsRes, billingRes] = await Promise.all([
                 fetch('/api/services'),
                 fetch('/api/pricing'),
                 fetch('/api/bikes'),
+                fetch('/api/bookings'),
+                fetch('/api/billing'),
             ]);
 
-            if (!servicesRes.ok || !pricingRes.ok || !bikesRes.ok) {
-                throw new Error('Failed to fetch data from server');
-            }
-
-            const [servicesData, pricingData, bikesData] = await Promise.all([
-                servicesRes.json(),
-                pricingRes.json(),
-                bikesRes.json(),
-            ]);
+            // Note: billing might return 401 if not logged in, we should handle that gracefully
+            const servicesData = await servicesRes.json();
+            const pricingData = await pricingRes.json();
+            const bikesData = await bikesRes.json();
+            const bookingsData = bookingsRes.ok ? await bookingsRes.json() : [];
+            const billingData = billingRes.ok ? await billingRes.json() : [];
 
             setState({
                 services: servicesData,
                 pricing: pricingData,
                 bikes: bikesData,
+                bookings: bookingsData,
+                billing: billingData,
                 loading: false,
                 error: null,
             });
@@ -92,6 +128,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    const addBooking = async (bookingData: any) => {
+        try {
+            const res = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData),
+            });
+
+            if (!res.ok) throw new Error('Failed to create booking');
+
+            const newBooking = await res.json();
+
+            // Refresh bookings list
+            fetchData();
+
+            return newBooking;
+        } catch (err) {
+            console.error('Error adding booking:', err);
+            throw err;
+        }
+    };
+
     useEffect(() => {
         fetchData();
     }, [fetchData]);
@@ -100,7 +158,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         <DataContext.Provider
             value={{
                 ...state,
-                refreshData: fetchData
+                refreshData: fetchData,
+                addBooking
             }}
         >
             {children}

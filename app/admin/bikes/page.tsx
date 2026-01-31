@@ -26,25 +26,25 @@ export default function BikesManagement() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {brands.map((brand) => (
-                        <div key={brand._id} className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 relative group">
+                        <div key={brand._id} className="p-6 rounded-2xl bg-white border border-zinc-200 hover:shadow-xl transition-all relative group">
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="p-2 bg-zinc-800 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                                <button className="p-2 bg-zinc-100 hover:bg-blue-600 hover:text-white text-zinc-600 rounded-lg transition-colors">
                                     <Pencil className="w-4 h-4" />
                                 </button>
-                                <button className="p-2 bg-zinc-800 hover:bg-red-600 text-white rounded-lg transition-colors">
+                                <button className="p-2 bg-zinc-100 hover:bg-red-600 hover:text-white text-zinc-600 rounded-lg transition-colors">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center mb-4">
                                 <Bike className="w-6 h-6 text-red-600" />
                             </div>
-                            <h4 className="text-xl font-bold mb-2">{brand.name}</h4>
+                            <h4 className="text-xl font-bold mb-2 text-zinc-900">{brand.name}</h4>
                             <p className="text-sm text-zinc-500">{brand.models.length} Models</p>
                             <div className="mt-4 flex flex-wrap gap-2">
                                 {brand.models.slice(0, 3).map((m: string) => (
-                                    <span key={m} className="text-[10px] bg-zinc-800 px-2 py-1 rounded-md text-zinc-400">{m}</span>
+                                    <span key={m} className="text-[10px] bg-zinc-100 px-2 py-1 rounded-md text-zinc-500">{m}</span>
                                 ))}
-                                {brand.models.length > 3 && <span className="text-[10px] text-zinc-600">+{brand.models.length - 3} more</span>}
+                                {brand.models.length > 3 && <span className="text-[10px] text-zinc-400">+{brand.models.length - 3} more</span>}
                             </div>
                         </div>
                     ))}

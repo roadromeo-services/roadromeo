@@ -5,19 +5,16 @@ import { Button, Select } from '@/components/common';
 import { siteConfig } from '@/lib/config/site';
 import { useEffect } from 'react';
 
+import { useData } from '@/components/providers/DataProvider';
+
 export const Hero = () => {
   const [name, setName] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedService, setSelectedService] = useState('');
   const [phone, setPhone] = useState('');
-  const [bikeBrands, setBikeBrands] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetch('/api/bikes').then(res => res.json()).then(data => setBikeBrands(data));
-    fetch('/api/services').then(res => res.json()).then(data => setServices(data));
-  }, []);
+  const { bikes: bikeBrands, services, addBooking } = useData();
 
   const brandOptions = bikeBrands.map(brand => ({
     value: brand._id || brand.id,
@@ -36,10 +33,30 @@ export const Hero = () => {
     label: service.name,
   }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const brandName = bikeBrands.find(b => (b._id || b.id) === selectedBrand)?.name || selectedBrand;
-    const serviceName = services.find(s => (s._id || s.id) === selectedService)?.name || selectedService;
+    const brandObj = bikeBrands.find(b => (b._id || b.id) === selectedBrand);
+    const serviceObj = services.find(s => (s._id || s.id) === selectedService);
+
+    const brandName = brandObj?.name || selectedBrand;
+    const serviceName = serviceObj?.name || selectedService;
+
+    // Save to database
+    try {
+      await addBooking({
+        customerName: name,
+        phoneNumber: phone,
+        bikeBrand: brandName,
+        bikeModel: selectedModel,
+        serviceType: serviceName,
+        bookingDate: new Date(),
+        totalAmount: serviceObj?.price || 0,
+        status: 'pending',
+        notes: 'Booked from Hero section'
+      });
+    } catch (err) {
+      console.error('Database booking failed, but proceeding to WhatsApp:', err);
+    }
 
     const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}%0AService: ${serviceName}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${message}`;

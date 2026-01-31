@@ -21,7 +21,7 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat) => (
-                    <div key={stat.name} className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800">
+                    <div key={stat.name} className="p-6 rounded-2xl bg-white border border-zinc-200">
                         <p className="text-sm text-zinc-500 font-medium mb-1">{stat.name}</p>
                         <p className={`text-3xl font-black ${stat.color}`}>{stat.value}</p>
                     </div>
@@ -29,14 +29,14 @@ export default function AdminDashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="p-8 rounded-3xl bg-zinc-900 border border-zinc-800">
-                    <h3 className="text-xl font-bold mb-6">Recent Activity</h3>
+                <div className="p-8 rounded-3xl bg-white border border-zinc-200">
+                    <h3 className="text-xl font-bold mb-6 text-zinc-900">Recent Activity</h3>
                     <div className="space-y-6">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="flex gap-4 items-start">
                                 <div className="w-2 h-2 rounded-full bg-red-600 mt-2 shrink-0" />
                                 <div>
-                                    <p className="text-sm font-medium text-white">New Service Added: "Monsoon Special Checkup"</p>
+                                    <p className="text-sm font-medium text-zinc-900">New Service Added: "Monsoon Special Checkup"</p>
                                     <p className="text-xs text-zinc-500">2 hours ago</p>
                                 </div>
                             </div>
@@ -44,13 +44,13 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="p-8 rounded-3xl bg-gradient-to-br from-red-600 to-black p-[1px]">
-                    <div className="w-full h-full bg-zinc-950 rounded-3xl p-8">
-                        <h3 className="text-xl font-bold mb-4 text-white">Quick Tips</h3>
-                        <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+                <div className="p-8 rounded-3xl bg-gradient-to-br from-red-600 to-zinc-900 p-[1px]">
+                    <div className="w-full h-full bg-white rounded-[23px] p-8">
+                        <h3 className="text-xl font-bold mb-4 text-zinc-900">Quick Tips</h3>
+                        <p className="text-zinc-500 text-sm leading-relaxed mb-6">
                             Making your data dynamic allows you to change prices and services instantly without redeploying your website.
                         </p>
-                        <button className="px-6 py-2 rounded-xl bg-white text-black text-sm font-bold">
+                        <button className="px-6 py-2 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors">
                             View Analytics
                         </button>
                     </div>
