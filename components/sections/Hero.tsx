@@ -17,26 +17,26 @@ export const Hero = () => {
   const { bikes: bikeBrands, services, addBooking } = useData();
 
   const brandOptions = bikeBrands.map(brand => ({
-    value: brand._id || brand.id,
+    value: brand._id,
     label: brand.name,
   }));
 
   const modelOptions = selectedBrand
-    ? (bikeBrands.find(b => (b._id || b.id) === selectedBrand)?.models || []).map((model: string) => ({
+    ? (bikeBrands.find(b => (b._id) === selectedBrand)?.models || []).map((model: string) => ({
       value: model,
       label: model,
     }))
     : [];
 
   const serviceOptions = services.map(service => ({
-    value: service._id || service.id,
+    value: service._id,
     label: service.name,
   }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const brandObj = bikeBrands.find(b => (b._id || b.id) === selectedBrand);
-    const serviceObj = services.find(s => (s._id || s.id) === selectedService);
+    const brandObj = bikeBrands.find(b => (b._id) === selectedBrand);
+    const serviceObj = services.find(s => (s._id) === selectedService);
 
     const brandName = brandObj?.name || selectedBrand;
     const serviceName = serviceObj?.name || selectedService;

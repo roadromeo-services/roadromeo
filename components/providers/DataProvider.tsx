@@ -39,6 +39,9 @@ interface Booking {
     email?: string;
     bikeBrand: string;
     bikeModel: string;
+    vehicleType: 'bike' | 'scooter';
+    vehicleNumber?: string;
+    address?: string;
     serviceType: string;
     bookingDate: string;
     status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
@@ -60,6 +63,8 @@ interface Billing {
     totalAmount: number;
     paymentStatus: 'pending' | 'paid' | 'failed';
     paymentMethod?: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 interface DataState {

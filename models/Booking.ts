@@ -6,6 +6,9 @@ export interface IBooking extends Document {
     email?: string;
     bikeBrand: string;
     bikeModel: string;
+    vehicleType: 'bike' | 'scooter';
+    vehicleNumber?: string;
+    address?: string;
     serviceType: string;
     bookingDate: Date;
     status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
@@ -19,6 +22,9 @@ const BookingSchema: Schema = new Schema({
     email: { type: String },
     bikeBrand: { type: String, required: true },
     bikeModel: { type: String, required: true },
+    vehicleType: { type: String, enum: ['bike', 'scooter'], default: 'bike' },
+    vehicleNumber: { type: String },
+    address: { type: String },
     serviceType: { type: String, required: true },
     bookingDate: { type: Date, required: true },
     status: {
