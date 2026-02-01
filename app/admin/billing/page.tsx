@@ -21,10 +21,13 @@ export default function BillingManagement() {
 
     const handleSave = async () => {
         try {
+            // Don't save discountPercent to database, it's just for UI calculation
+            const { discountPercent, ...dataToSave } = editData;
+
             if (editingId) {
-                await updateBilling(editingId, editData);
+                await updateBilling(editingId, dataToSave);
             } else {
-                await createBilling(editData);
+                await createBilling(dataToSave);
             }
             setEditingId(null);
             setIsAdding(false);
@@ -54,18 +57,20 @@ export default function BillingManagement() {
         const newItems = [...editData.items];
         newItems[index] = { ...newItems[index], [field]: value };
 
-        // Calculate total
+        // Calculate total with discount percentage
         const subtotal = newItems.reduce((acc: number, item) => acc + (item.price * item.quantity), 0);
-        const total = subtotal + (editData.tax || 0) - (editData.discount || 0);
+        const discount = Math.round((subtotal * (editData.discountPercent || 0)) / 100);
+        const total = subtotal + (editData.tax || 0) - discount;
 
-        setEditData({ ...editData, items: newItems, totalAmount: total });
+        setEditData({ ...editData, items: newItems, discount, totalAmount: total });
     };
 
     const removeItem = (index: number) => {
         const newItems = editData.items.filter((_: any, i: number) => i !== index);
         const subtotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
-        const total = subtotal + (editData.tax || 0) - (editData.discount || 0);
-        setEditData({ ...editData, items: newItems, totalAmount: total });
+        const discount = Math.round((subtotal * (editData.discountPercent || 0)) / 100);
+        const total = subtotal + (editData.tax || 0) - discount;
+        setEditData({ ...editData, items: newItems, discount, totalAmount: total });
     };
 
     // Filter billing by vehicle number or customer name
@@ -118,7 +123,7 @@ export default function BillingManagement() {
             </div>
 
             <div style="text-align: right;">
-                <div style="font-size: 46px; font-weight: 900; opacity: 0.15; letter-spacing: 4px;">ESTIMATE</div>
+                <div style="font-size: 46px; font-weight: 900; opacity: 0.15; letter-spacing: 4px;"></div>
                 <p style="font-size: 14px; font-weight: 700; margin: 6px 0;">${inv.invoiceNumber}</p>
                 <p style="font-size: 13px; color: #9ca3af;">${new Date(inv.createdAt).toLocaleDateString()}</p>
             </div>
@@ -263,8 +268,8 @@ export default function BillingManagement() {
                             setEditData({
                                 invoiceNumber: `EST-${Date.now()}`,
                                 items: [{ description: '', quantity: 1, price: 0 }],
-                                tax: 0,
                                 discount: 0,
+                                discountPercent: 0,
                                 totalAmount: 0,
                                 paymentStatus: 'pending'
                             });
@@ -411,10 +416,10 @@ export default function BillingManagement() {
                                         <span className="text-zinc-500">Subtotal</span>
                                         <span className="text-zinc-900">₹{printingInvoice.items.reduce((acc: number, i: any) => acc + (i.price * i.quantity), 0)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center text-sm font-medium">
+                                    {/* <div className="flex justify-between items-center text-sm font-medium">
                                         <span className="text-zinc-500">Tax</span>
                                         <span className="text-zinc-900">₹{printingInvoice.tax || 0}</span>
-                                    </div>
+                                    </div> */}
                                     <div className="flex justify-between items-center text-sm font-medium">
                                         <span className="text-zinc-500">Discount</span>
                                         <span className="text-red-600">-₹{printingInvoice.discount || 0}</span>
@@ -586,30 +591,56 @@ export default function BillingManagement() {
                         <div className="flex justify-end pt-6 border-t border-zinc-100">
                             <div className="w-full max-w-xs space-y-4">
                                 <div className="flex justify-between items-center text-sm">
+                                    <span className="text-zinc-500">Subtotal</span>
+                                    <span className="font-bold text-zinc-900">₹{editData.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0)}</span>
+                                </div>
+                                {/* <div className="flex justify-between items-center text-sm">
                                     <span className="text-zinc-500">Tax (₹)</span>
                                     <input
                                         type="number"
                                         value={editData.tax || 0}
                                         onChange={(e) => {
-                                            const tax = Number(e.target.value);
+                                          
                                             const subtotal = editData.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
-                                            setEditData({ ...editData, tax, totalAmount: subtotal + tax - (editData.discount || 0) });
+                                            const tax = Number(e.target.value);
+                                            setEditData({
+                                                ...editData,
+                                                tax,
+                                                totalAmount: subtotal + tax - (editData.discount || 0)
+                                            });
                                         }}
                                         className="w-24 text-right bg-zinc-50 border-none outline-none font-bold"
                                     />
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-zinc-500">Discount (₹)</span>
-                                    <input
-                                        type="number"
-                                        value={editData.discount || 0}
-                                        onChange={(e) => {
-                                            const discount = Number(e.target.value);
-                                            const subtotal = editData.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
-                                            setEditData({ ...editData, discount, totalAmount: subtotal + (editData.tax || 0) - discount });
-                                        }}
-                                        className="w-24 text-right bg-zinc-50 border-none outline-none font-bold text-red-600"
-                                    />
+                                </div> */}
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-zinc-500">Discount (%)</span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={editData.discountPercent || 0}
+                                            onChange={(e) => {
+                                                const discountPercent = Number(e.target.value);
+                                                const subtotal = editData.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                                                const discount = Math.round((subtotal * discountPercent) / 100);
+                                                setEditData({
+                                                    ...editData,
+                                                    discountPercent,
+                                                    discount,
+                                                    totalAmount: subtotal + (editData.tax || 0) - discount
+                                                });
+                                            }}
+                                            className="w-24 text-right bg-zinc-50 border-none outline-none font-bold text-red-600"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                    {editData.discountPercent > 0 && (
+                                        <div className="flex justify-between items-center text-xs text-red-600">
+                                            <span>Discount Amount</span>
+                                            <span className="font-bold">-₹{editData.discount || 0}</span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex justify-between items-center pt-4 border-t border-zinc-200">
                                     <span className="text-lg font-black text-zinc-900">Total Amount</span>
