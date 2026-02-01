@@ -33,7 +33,8 @@ export default function ServicesManagement() {
         shortDescription: '',
         description: '',
         icon: 'Wrench',
-        popular: false
+        popular: false,
+        features: [] as string[]
     });
 
     const filteredIcons = useMemo(() => {
@@ -58,7 +59,7 @@ export default function ServicesManagement() {
                 setIsAdding(false);
                 setEditingId(null);
                 refreshData();
-                setFormData({ name: '', slug: '', price: 0, duration: '', shortDescription: '', description: '', icon: 'Wrench', popular: false });
+                setFormData({ name: '', slug: '', price: 0, duration: '', shortDescription: '', description: '', icon: 'Wrench', popular: false, features: [] });
             }
         } catch (err) {
             console.error(err);
@@ -150,6 +151,45 @@ export default function ServicesManagement() {
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 h-32 focus:border-red-600 outline-none transition-colors resize-none"
                             />
+                        </div>
+                        {/* Features Management */}
+                        <div className="md:col-span-2 space-y-2">
+                            <label className="text-sm font-medium text-zinc-500">Service Features</label>
+                            <div className="space-y-3">
+                                {formData.features.map((feature, index) => (
+                                    <div key={index} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={feature}
+                                            onChange={(e) => {
+                                                const newFeatures = [...formData.features];
+                                                newFeatures[index] = e.target.value;
+                                                setFormData({ ...formData, features: newFeatures });
+                                            }}
+                                            className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:border-red-600 outline-none transition-colors"
+                                            placeholder="Enter feature description"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newFeatures = formData.features.filter((_, i) => i !== index);
+                                                setFormData({ ...formData, features: newFeatures });
+                                            }}
+                                            className="p-3 bg-zinc-100 hover:bg-red-600 hover:text-white text-zinc-600 rounded-xl transition-colors"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, features: [...formData.features, ''] })}
+                                    className="w-full bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 hover:border-red-600 text-zinc-600 font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Add Feature
+                                </button>
+                            </div>
                         </div>
                         {/* Icon Picker */}
                         <div className="md:col-span-2 space-y-2">
@@ -252,7 +292,10 @@ export default function ServicesManagement() {
                                     <button
                                         onClick={() => {
                                             setEditingId(service._id);
-                                            setFormData(service);
+                                            setFormData({
+                                                ...service,
+                                                features: service.features || []
+                                            });
                                             setIsAdding(false);
                                         }}
                                         className="p-2 bg-zinc-100 hover:bg-blue-600 hover:text-white text-zinc-600 rounded-lg transition-colors"
@@ -272,6 +315,19 @@ export default function ServicesManagement() {
                                 <h4 className="text-xl font-bold mb-1 text-zinc-900">{service.name}</h4>
                                 <p className="text-red-600 font-bold mb-4">₹{service.price}</p>
                                 <p className="text-zinc-500 text-sm line-clamp-2">{service.description}</p>
+                                {service.features && service.features.length > 0 && (
+                                    <div className="mt-4 space-y-1">
+                                        {service.features.slice(0, 3).map((feature, idx) => (
+                                            <div key={idx} className="flex items-start gap-2 text-xs text-zinc-600">
+                                                <span className="text-red-600 mt-0.5">✓</span>
+                                                <span className="line-clamp-1">{feature}</span>
+                                            </div>
+                                        ))}
+                                        {service.features.length > 3 && (
+                                            <p className="text-xs text-zinc-400 pl-4">+{service.features.length - 3} more</p>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="mt-6 flex items-center gap-4 text-xs font-bold text-zinc-400 uppercase tracking-widest">
                                     <span>{service.duration}</span>
                                     {service.popular && <span className="text-orange-500">Popular</span>}
