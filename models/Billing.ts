@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBilling extends Document {
-    bookingId: mongoose.Types.ObjectId;
+    bookingId?: mongoose.Types.ObjectId;
     invoiceNumber: string;
+    customerName?: string;
+    vehicleNumber?: string;
     items: {
         description: string;
         quantity: number;
@@ -16,8 +18,10 @@ export interface IBilling extends Document {
 }
 
 const BillingSchema: Schema = new Schema({
-    bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true },
+    bookingId: { type: Schema.Types.ObjectId, ref: 'Booking' },
     invoiceNumber: { type: String, required: true, unique: true },
+    customerName: { type: String },
+    vehicleNumber: { type: String },
     items: [{
         description: { type: String, required: true },
         quantity: { type: Number, required: true, default: 1 },

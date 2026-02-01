@@ -65,6 +65,8 @@ interface Billing {
     paymentMethod?: string;
     createdAt: string;
     updatedAt: string;
+    vehicleNumber?: string;
+    customerName?: string;
 }
 
 interface DataState {

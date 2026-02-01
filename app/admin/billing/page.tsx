@@ -7,13 +7,16 @@ import {
     Trash2, Edit2, CheckCircle, XCircle, ChevronDown,
     PlusCircle, MinusCircle, Save, X, Printer, User, Bike, MapPin, Phone
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function BillingManagement() {
-    const { billing, updateBilling, deleteBilling, createBilling, loading } = useData();
+    const { billing, updateBilling, deleteBilling, createBilling, loading, bookings } = useData();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editData, setEditData] = useState<any>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [printingInvoice, setPrintingInvoice] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleSave = async () => {
         try {
@@ -64,156 +67,169 @@ export default function BillingManagement() {
         setEditData({ ...editData, items: newItems, totalAmount: total });
     };
 
-    const handleDownloadPDF = () => {
+    // Filter billing by vehicle number or customer name
+    const filteredBilling = billing.filter((bill) => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        const vehicleNum = bill.vehicleNumber?.toLowerCase() || bill.bookingId?.vehicleNumber?.toLowerCase() || '';
+        const customerName = bill.customerName?.toLowerCase() || bill.bookingId?.customerName?.toLowerCase() || '';
+        const invoiceNum = bill.invoiceNumber?.toLowerCase() || '';
+        return vehicleNum.includes(query) || customerName.includes(query) || invoiceNum.includes(query);
+    });
+
+    const handleDownloadPDF = async () => {
         if (!printingInvoice) return;
 
         const inv = printingInvoice;
         const booking = inv.bookingId;
+        const customerName = booking?.customerName || inv.customerName || 'Direct Customer';
+        const vehicleNumber = booking?.vehicleNumber || inv.vehicleNumber || 'N/A';
         const subtotal = inv.items.reduce((acc: number, i: any) => acc + (i.price * i.quantity), 0);
 
-        const itemRows = inv.items.map((item: any) => `
-            <tr>
-                <td style="padding:12px 16px;font-weight:600;color:#111;">${item.description}</td>
-                <td style="padding:12px 16px;text-align:center;color:#666;">${item.quantity}</td>
-                <td style="padding:12px 16px;text-align:right;color:#666;">&#8377;${item.price}</td>
-                <td style="padding:12px 16px;text-align:right;font-weight:700;color:#111;">&#8377;${item.price * item.quantity}</td>
-            </tr>
-        `).join('');
+        // Create a temporary div with clean HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.width = '800px';
+        tempDiv.style.padding = '40px';
+        tempDiv.style.backgroundColor = '#ffffff';
+        tempDiv.style.fontFamily = 'Arial, sans-serif';
 
-        const statusColor = inv.paymentStatus === 'paid' ? '#16a34a' : '#dc2626';
-        const statusBg = inv.paymentStatus === 'paid' ? '#dcfce7' : '#fef2f2';
-
-        const html = `
-        <html>
-        <head>
-            <meta charset="utf-8" />
-            <title>Invoice ${inv.invoiceNumber}</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-            <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-            <style>
-                * { margin:0; padding:0; box-sizing:border-box; }
-                body { font-family: 'Geist', Arial, Helvetica, sans-serif; color:#111; background:#fff; padding:40px; }
-                .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; }
-                .logo-box { width:48px; height:48px; background:#dc2626; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:18px; margin-right:10px; vertical-align:middle; }
-                .brand { font-size:28px; font-weight:900; display:inline; vertical-align:middle; }
-                .brand span { color:#dc2626; }
-                .tagline { color:#888; font-size:13px; margin-top:6px; }
-                .contact { color:#aaa; font-size:12px; margin-top:8px; line-height:1.6; }
-                .invoice-label { font-size:42px; font-weight:900; color:#e5e5e5; text-transform:uppercase; }
-                .invoice-meta { text-align:right; margin-top:8px; }
-                .invoice-meta p { font-size:13px; color:#666; }
-                .invoice-meta .num { font-weight:700; color:#111; font-size:14px; }
-                .divider { border:none; border-top:1px solid #eee; margin:30px 0; }
-                .info-grid { display:flex; gap:60px; margin-bottom:30px; }
-                .info-section { flex:1; }
-                .info-label { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:2px; color:#aaa; margin-bottom:12px; }
-                .info-value { font-size:14px; color:#111; font-weight:600; margin-bottom:4px; }
-                .info-sub { font-size:13px; color:#666; margin-bottom:4px; }
-                .plate { display:inline-block; background:#f4f4f5; border:1px solid #e4e4e7; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:900; text-transform:uppercase; margin-top:4px; }
-                table { width:100%; border-collapse:collapse; margin:20px 0; }
-                thead tr { background:#fafafa; }
-                thead th { padding:10px 16px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:1.5px; color:#aaa; border-bottom:1px solid #e5e5e5; text-align:left; }
-                thead th.r { text-align:right; }
-                thead th.c { text-align:center; }
-                tbody tr { border-bottom:1px solid #f4f4f5; }
-                .totals { display:flex; justify-content:flex-end; margin-top:20px; }
-                .totals-box { width:260px; }
-                .total-row { display:flex; justify-content:space-between; padding:8px 0; font-size:13px; }
-                .total-row .label { color:#888; }
-                .total-row .value { color:#111; font-weight:500; }
-                .total-row.discount .value { color:#dc2626; }
-                .grand-total { display:flex; justify-content:space-between; padding:14px 0; border-top:2px solid #555; margin-top:8px; }
-                .grand-total .label { font-size:16px; font-weight:900; color:#111; }
-                .grand-total .value { font-size:22px; font-weight:900; color:#dc2626; }
-                .status-badge { display:inline-block; padding:6px 20px; border-radius:10px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-top:16px; }
-                .footer { text-align:center; margin-top:60px; padding-top:20px; }
-                .footer p { font-size:14px; font-weight:600; }
-                .footer .note { font-size:11px; color:#aaa; font-style:italic; margin-top:8px; }
-                @media print { body { padding:20px; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div>
-                    <div><span class="logo-box">RR</span><span class="brand">ROAD<span>ROMEO</span></span></div>
-                    <p class="tagline">Professional Bike Service &amp; Repairs</p>
-                    <div class="contact">
-                        <p>Pune, Maharashtra, India</p>
-                        <p>Support: +91 93596 66964</p>
+        tempDiv.innerHTML = `
+            <div style="max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px;">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <div style="width: 48px; height: 48px; background: #dc2626; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 20px;">RR</div>
+                            <h1 style="font-size: 28px; font-weight: 900; margin: 0;">ROAD<span style="color: #dc2626;">ROMEO</span></h1>
+                        </div>
+                        <p style="color: #666; font-size: 14px; margin: 5px 0;">Professional Bike Service & Repairs</p>
+                        <div style="color: #999; font-size: 12px; margin-top: 10px;">
+                            <p style="margin: 2px 0;">Pune, Maharashtra, India</p>
+                            <p style="margin: 2px 0;">Support: +91 93596 66964</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 42px; font-weight: 900; color: #e5e5e5; text-transform: uppercase;">INVOICE</div>
+                        <p style="font-weight: 700; color: #111; font-size: 14px; margin: 5px 0;">${inv.invoiceNumber}</p>
+                        <p style="color: #666; font-size: 13px; margin: 5px 0;">${new Date(inv.createdAt).toLocaleDateString()}</p>
                     </div>
                 </div>
-                <div style="text-align:right;">
-                    <div class="invoice-label">Invoice</div>
-                    <div class="invoice-meta">
-                        <p class="num">${inv.invoiceNumber}</p>
-                        <p>${new Date(inv.createdAt).toLocaleDateString()}</p>
+
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+                <!-- Customer & Vehicle Info -->
+                <div style="display: flex; gap: 60px; margin-bottom: 30px;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 12px;">BILL TO:</div>
+                        <p style="font-size: 14px; color: #111; font-weight: 600; margin: 4px 0;">${customerName}</p>
+                        ${booking?.phoneNumber ? `<p style="font-size: 13px; color: #666; margin: 4px 0;">+91 ${booking.phoneNumber}</p>` : ''}
+                        ${booking?.address ? `<p style="font-size: 13px; color: #666; margin: 4px 0;">${booking.address}</p>` : ''}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 12px;">VEHICLE:</div>
+                        ${booking ? `
+                            <p style="font-size: 14px; color: #111; font-weight: 600; margin: 4px 0; text-transform: uppercase;">${booking.bikeBrand} ${booking.bikeModel}</p>
+                        ` : ''}
+                        <div style="display: inline-block; background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 900; text-transform: uppercase; margin-top: 4px;">
+                            ${vehicleNumber}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <hr class="divider" />
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
 
-            <div class="info-grid">
-                <div class="info-section">
-                    <div class="info-label">Bill To:</div>
-                    ${booking ? `
-                        <p class="info-value">${booking.customerName}</p>
-                        <p class="info-sub">+91 ${booking.phoneNumber}</p>
-                        ${booking.address ? `<p class="info-sub">${booking.address}</p>` : ''}
-                    ` : '<p class="info-sub" style="font-style:italic;">Direct Customer</p>'}
-                </div>
-                <div class="info-section">
-                    <div class="info-label">Vehicle Details:</div>
-                    ${booking ? `
-                        <p class="info-value" style="text-transform:uppercase;">${booking.bikeBrand} ${booking.bikeModel}</p>
-                        ${booking.vehicleNumber ? `<span class="plate">${booking.vehicleNumber}</span>` : ''}
-                    ` : '<p class="info-sub" style="font-style:italic;">N/A</p>'}
-                </div>
-            </div>
+                <!-- Items Table -->
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <thead>
+                        <tr style="background: #fafafa;">
+                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: left;">Description</th>
+                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: center;">Qty</th>
+                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: right;">Price</th>
+                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${inv.items.map((item: any) => `
+                            <tr style="border-bottom: 1px solid #f4f4f5;">
+                                <td style="padding: 12px 16px; font-weight: 600; color: #111;">${item.description}</td>
+                                <td style="padding: 12px 16px; text-align: center; color: #666;">${item.quantity}</td>
+                                <td style="padding: 12px 16px; text-align: right; color: #666;">₹${item.price}</td>
+                                <td style="padding: 12px 16px; text-align: right; font-weight: 700; color: #111;">₹${item.price * item.quantity}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
 
-            <hr class="divider" />
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th class="c">Qty</th>
-                        <th class="r">Price</th>
-                        <th class="r">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${itemRows}
-                </tbody>
-            </table>
-
-            <div class="totals">
-                <div class="totals-box">
-                    <div class="total-row"><span class="label">Subtotal</span><span class="value">&#8377;${subtotal}</span></div>
-                    <div class="total-row"><span class="label">Tax</span><span class="value">&#8377;${inv.tax || 0}</span></div>
-                    <div class="total-row discount"><span class="label">Discount</span><span class="value">-&#8377;${inv.discount || 0}</span></div>
-                    <div class="grand-total"><span class="label">Grand Total</span><span class="value">&#8377;${inv.totalAmount}</span></div>
-                    <div style="text-align:center;margin-top:16px;">
-                        <span class="status-badge" style="background:${statusBg};color:${statusColor};">Status: ${inv.paymentStatus}</span>
+                <!-- Totals -->
+                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                    <div style="width: 260px;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+                            <span style="color: #888;">Subtotal</span>
+                            <span style="color: #111; font-weight: 500;">₹${subtotal}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+                            <span style="color: #888;">Tax</span>
+                            <span style="color: #111; font-weight: 500;">₹${inv.tax || 0}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+                            <span style="color: #888;">Discount</span>
+                            <span style="color: #dc2626; font-weight: 500;">-₹${inv.discount || 0}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 14px 0; border-top: 2px solid #555; margin-top: 8px;">
+                            <span style="font-size: 16px; font-weight: 900; color: #111;">Grand Total</span>
+                            <span style="font-size: 22px; font-weight: 900; color: #dc2626;">₹${inv.totalAmount}</span>
+                        </div>
+                        <div style="text-align: center; margin-top: 16px;">
+                            <span style="display: inline-block; padding: 6px 20px; border-radius: 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; background: ${inv.paymentStatus === 'paid' ? '#dcfce7' : '#fef2f2'}; color: ${inv.paymentStatus === 'paid' ? '#16a34a' : '#dc2626'};">
+                                Status: ${inv.paymentStatus}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="footer">
-                <p>Thank you for choosing RoadRomeo!</p>
-                <p class="note">This is a computer generated invoice and does not require a signature.</p>
+                <!-- Footer -->
+                <div style="text-align: center; margin-top: 60px; padding-top: 20px;">
+                    <p style="font-size: 14px; font-weight: 600; margin: 0;">Thank you for choosing RoadRomeo!</p>
+                    <p style="font-size: 11px; color: #aaa; font-style: italic; margin-top: 8px;">This is a computer generated invoice and does not require a signature.</p>
+                </div>
             </div>
-        </body>
-        </html>`;
+        `;
 
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.onload = () => {
-            printWindow.print();
-        };
+        document.body.appendChild(tempDiv);
+
+        try {
+            const canvas = await html2canvas(tempDiv, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+            const imgX = (pdfWidth - imgWidth * ratio) / 2;
+            const imgY = 0;
+
+            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            pdf.save(`${inv.invoiceNumber}.pdf`);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            document.body.removeChild(tempDiv);
+        }
     };
 
     if (loading) {
@@ -275,7 +291,7 @@ export default function BillingManagement() {
                         </button>
 
                         {/* Invoice Contents */}
-                        <div className="space-y-12 bg-white p-8">
+                        <div id="invoice-content" className="space-y-12 bg-white p-8">
                             {/* Header */}
                             <div className="flex justify-between items-start">
                                 <div className="space-y-2">
@@ -319,6 +335,13 @@ export default function BillingManagement() {
                                                 </div>
                                             )}
                                         </div>
+                                    ) : printingInvoice.customerName ? (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-zinc-900 font-bold">
+                                                <User className="w-4 h-4 text-red-600" />
+                                                <p>{printingInvoice.customerName}</p>
+                                            </div>
+                                        </div>
                                     ) : (
                                         <p className="text-zinc-500 italic">Direct Customer</p>
                                     )}
@@ -336,6 +359,13 @@ export default function BillingManagement() {
                                                     {printingInvoice.bookingId.vehicleNumber}
                                                 </div>
                                             )}
+                                        </div>
+                                    ) : printingInvoice.vehicleNumber ? (
+                                        <div className="space-y-3">
+                                            <div className="px-3 py-1 bg-zinc-100 rounded-lg w-fit text-sm font-black border border-zinc-200 uppercase">
+                                                <Bike className="w-4 h-4 text-red-600 inline mr-2" />
+                                                {printingInvoice.vehicleNumber}
+                                            </div>
                                         </div>
                                     ) : (
                                         <p className="text-zinc-500 italic">N/A</p>
@@ -418,6 +448,62 @@ export default function BillingManagement() {
                     </div>
 
                     <div className="space-y-6">
+                        {/* Link to Booking */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase text-zinc-400">Link to Booking (Optional)</label>
+                            <select
+                                value={editData.bookingId || ''}
+                                onChange={(e) => {
+                                    const selectedBooking = bookings.find(b => b._id === e.target.value);
+                                    if (selectedBooking) {
+                                        setEditData({
+                                            ...editData,
+                                            bookingId: e.target.value,
+                                            customerName: selectedBooking.customerName,
+                                            vehicleNumber: selectedBooking.vehicleNumber
+                                        });
+                                    } else {
+                                        setEditData({
+                                            ...editData,
+                                            bookingId: '',
+                                            customerName: editData.customerName || '',
+                                            vehicleNumber: editData.vehicleNumber || ''
+                                        });
+                                    }
+                                }}
+                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none focus:border-red-600"
+                            >
+                                <option value="">No Booking (Direct Invoice)</option>
+                                {bookings.map((booking) => (
+                                    <option key={booking._id} value={booking._id}>
+                                        {booking.customerName} - {booking.vehicleNumber || booking.bikeBrand} ({booking.serviceType})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Customer Details */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black uppercase text-zinc-400">Customer Name</label>
+                                <input
+                                    value={editData.customerName || ''}
+                                    onChange={(e) => setEditData({ ...editData, customerName: e.target.value })}
+                                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none focus:border-red-600"
+                                    placeholder="Enter customer name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black uppercase text-zinc-400">Vehicle Number</label>
+                                <input
+                                    value={editData.vehicleNumber || ''}
+                                    onChange={(e) => setEditData({ ...editData, vehicleNumber: e.target.value })}
+                                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none focus:border-red-600"
+                                    placeholder="e.g., MH12AB1234"
+                                />
+                            </div>
+                        </div>
+
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-xs font-black uppercase text-zinc-400">Payment Status</label>
@@ -533,7 +619,9 @@ export default function BillingManagement() {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                             <input
                                 type="text"
-                                placeholder="Search invoices..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search by vehicle number, customer name, or invoice..."
                                 className="w-full pl-11 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl outline-none focus:border-red-600 transition-colors"
                             />
                         </div>
@@ -551,20 +639,23 @@ export default function BillingManagement() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-100">
-                                {billing.length === 0 ? (
+                                {filteredBilling.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-8 py-20 text-center text-zinc-500">
                                             <Receipt className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
-                                            <p className="font-medium text-zinc-900">No invoices yet</p>
+                                            <p className="font-medium text-zinc-900">{searchQuery ? 'No matching invoices' : 'No invoices yet'}</p>
                                         </td>
                                     </tr>
                                 ) : (
-                                    billing.map((bill) => (
+                                    filteredBilling.map((bill) => (
                                         <tr key={bill._id} className="hover:bg-zinc-50 transition-colors group">
                                             <td className="px-8 py-6">
                                                 <p className="font-bold text-zinc-900">{bill.invoiceNumber}</p>
                                                 <p className="text-[10px] text-zinc-400 font-mono">
-                                                    {bill.bookingId?.customerName || 'Direct'}
+                                                    {bill.bookingId?.customerName || bill.customerName || 'Direct'}
+                                                    {(bill.vehicleNumber || bill.bookingId?.vehicleNumber) && (
+                                                        <span className="ml-2 text-red-600">• {bill.vehicleNumber || bill.bookingId?.vehicleNumber}</span>
+                                                    )}
                                                 </p>
                                             </td>
                                             <td className="px-8 py-6">
