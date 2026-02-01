@@ -97,106 +97,113 @@ export default function BillingManagement() {
         tempDiv.style.fontFamily = 'Arial, sans-serif';
 
         tempDiv.innerHTML = `
-            <div style="max-width: 800px; margin: 0 auto; background: #ffffff; padding: 40px;">
-                <!-- Header -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+<div style="max-width: 820px; margin: 0 auto; background: #ffffff; font-family: Inter, system-ui, -apple-system;">
+
+    <!-- TOP BRAND BAR -->
+    <div style="background: linear-gradient(135deg, #111 0%, #1f1f1f 100%); padding: 36px 40px; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 52px; height: 52px; background: #dc2626; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px;">RR</div>
                     <div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <div style="width: 48px; height: 48px; background: #dc2626; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 20px;">RR</div>
-                            <h1 style="font-size: 28px; font-weight: 900; margin: 0;">ROAD<span style="color: #dc2626;">ROMEO</span></h1>
-                        </div>
-                        <p style="color: #666; font-size: 14px; margin: 5px 0;">Professional Bike Service & Repairs</p>
-                        <div style="color: #999; font-size: 12px; margin-top: 10px;">
-                            <p style="margin: 2px 0;">Pune, Maharashtra, India</p>
-                            <p style="margin: 2px 0;">Support: +91 ${siteConfig.contact.phone}</p>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 42px; font-weight: 900; color: #e5e5e5; text-transform: uppercase;">INVOICE</div>
-                        <p style="font-weight: 700; color: #111; font-size: 14px; margin: 5px 0;">${inv.invoiceNumber}</p>
-                        <p style="color: #666; font-size: 13px; margin: 5px 0;">${new Date(inv.createdAt).toLocaleDateString()}</p>
+                        <h1 style="font-size: 30px; font-weight: 900; margin: 0; letter-spacing: 1px;">
+                            ROAD<span style="color: #dc2626;">ROMEO</span>
+                        </h1>
+                        <p style="margin: 4px 0 0; font-size: 13px; color: #bbb;">Professional Bike Service & Repairs</p>
                     </div>
                 </div>
+                <p style="margin-top: 14px; font-size: 12px; color: #9ca3af;">
+                    Pune, Maharashtra • Support: +91 ${siteConfig.contact.phone}
+                </p>
+            </div>
 
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+            <div style="text-align: right;">
+                <div style="font-size: 46px; font-weight: 900; opacity: 0.15; letter-spacing: 4px;">INVOICE</div>
+                <p style="font-size: 14px; font-weight: 700; margin: 6px 0;">${inv.invoiceNumber}</p>
+                <p style="font-size: 13px; color: #9ca3af;">${new Date(inv.createdAt).toLocaleDateString()}</p>
+            </div>
+        </div>
+    </div>
 
-                <!-- Customer & Vehicle Info -->
-                <div style="display: flex; gap: 60px; margin-bottom: 30px;">
-                    <div style="flex: 1;">
-                        <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 12px;">BILL TO:</div>
-                        <p style="font-size: 14px; color: #111; font-weight: 600; margin: 4px 0;">${customerName}</p>
-                        ${booking?.phoneNumber ? `<p style="font-size: 13px; color: #666; margin: 4px 0;">+91 ${booking.phoneNumber}</p>` : ''}
-                        ${booking?.address ? `<p style="font-size: 13px; color: #666; margin: 4px 0;">${booking.address}</p>` : ''}
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin-bottom: 12px;">VEHICLE:</div>
-                        ${booking ? `
-                            <p style="font-size: 14px; color: #111; font-weight: 600; margin: 4px 0; text-transform: uppercase;">${booking.bikeBrand} ${booking.bikeModel}</p>
-                        ` : ''}
-                        <div style="display: inline-block; background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 900; text-transform: uppercase; margin-top: 4px;">
-                            ${vehicleNumber}
-                        </div>
-                    </div>
+    <!-- BODY -->
+    <div style="padding: 40px;">
+
+        <!-- CUSTOMER + VEHICLE -->
+        <div style="display: flex; gap: 50px; margin-bottom: 40px;">
+            <div style="flex: 1;">
+                <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; margin-bottom: 10px;">BILLED TO</div>
+                <p style="font-size: 15px; font-weight: 700; margin: 4px 0;">${customerName}</p>
+                ${booking?.phoneNumber ? `<p style="font-size: 13px; color: #666;">+91 ${booking.phoneNumber}</p>` : ''}
+                ${booking?.address ? `<p style="font-size: 13px; color: #666;">${booking.address}</p>` : ''}
+            </div>
+
+            <div style="flex: 1;">
+                <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; margin-bottom: 10px;">VEHICLE</div>
+                ${booking ? `<p style="font-size: 15px; font-weight: 700; text-transform: uppercase;">${booking.bikeBrand} ${booking.bikeModel}</p>` : ''}
+                <span style="display: inline-block; margin-top: 8px; padding: 6px 14px; background: #111; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;">
+                    ${vehicleNumber}
+                </span>
+            </div>
+        </div>
+
+        <!-- ITEMS -->
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 12px 0; text-align: left; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">DESCRIPTION</th>
+                    <th style="text-align: center; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">QTY</th>
+                    <th style="text-align: right; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">PRICE</th>
+                    <th style="text-align: right; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${inv.items.map((item: any) => `
+                <tr style="border-bottom: 1px solid #f1f1f1;">
+                    <td style="padding: 4px 0; font-weight: 600;">${item.description}</td>
+                    <td style="text-align: center; color: #666;">${item.quantity}</td>
+                    <td style="text-align: right; color: #666;">₹${item.price}</td>
+                    <td style="text-align: right; font-weight: 700;">₹${item.price * item.quantity}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <!-- TOTAL CARD -->
+        <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
+            <div style="width: 300px; background: #fafafa; border-radius: 16px; padding: 24px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px;">
+                    <span>Subtotal</span><span>₹${subtotal}</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 16px;">
+                    <span>Discount</span><span style="color:#dc2626;">-₹${inv.discount || 0}</span>
                 </div>
 
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-
-                <!-- Items Table -->
-                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                    <thead>
-                        <tr style="background: #fafafa;">
-                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: left;">Description</th>
-                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: center;">Qty</th>
-                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: right;">Price</th>
-                            <th style="padding: 10px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #aaa; border-bottom: 1px solid #e5e5e5; text-align: right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${inv.items.map((item: any) => `
-                            <tr style="border-bottom: 1px solid #f4f4f5;">
-                                <td style="padding: 12px 16px; font-weight: 600; color: #111;">${item.description}</td>
-                                <td style="padding: 12px 16px; text-align: center; color: #666;">${item.quantity}</td>
-                                <td style="padding: 12px 16px; text-align: right; color: #666;">₹${item.price}</td>
-                                <td style="padding: 12px 16px; text-align: right; font-weight: 700; color: #111;">₹${item.price * item.quantity}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-
-                <!-- Totals -->
-                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-                    <div style="width: 260px;">
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
-                            <span style="color: #888;">Subtotal</span>
-                            <span style="color: #111; font-weight: 500;">₹${subtotal}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
-                            <span style="color: #888;">Tax</span>
-                            <span style="color: #111; font-weight: 500;">₹${inv.tax || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px;">
-                            <span style="color: #888;">Discount</span>
-                            <span style="color: #dc2626; font-weight: 500;">-₹${inv.discount || 0}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 14px 0; border-top: 2px solid #555; margin-top: 8px;">
-                            <span style="font-size: 16px; font-weight: 900; color: #111;">Grand Total</span>
-                            <span style="font-size: 22px; font-weight: 900; color: #dc2626;">₹${inv.totalAmount}</span>
-                        </div>
-                        <div style="text-align: center; margin-top: 16px;">
-                            <span style="display: inline-block; padding: 6px 20px; border-radius: 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; background: ${inv.paymentStatus === 'paid' ? '#dcfce7' : '#fef2f2'}; color: ${inv.paymentStatus === 'paid' ? '#16a34a' : '#dc2626'};">
-                                Status: ${inv.paymentStatus}
-                            </span>
-                        </div>
-                    </div>
+                <div style="border-top: 2px solid #111; padding-top: 14px; display: flex; justify-content: space-between;">
+                    <span style="font-weight: 900;">GRAND TOTAL</span>
+                    <span style="font-size: 22px; font-weight: 900; color: #dc2626;">₹${inv.totalAmount}</span>
                 </div>
 
-                <!-- Footer -->
-                <div style="text-align: center; margin-top: 60px; padding-top: 20px;">
-                    <p style="font-size: 14px; font-weight: 600; margin: 0;">Thank you for choosing RoadRomeo!</p>
-                    <p style="font-size: 11px; color: #aaa; font-style: italic; margin-top: 8px;">This is a computer generated invoice and does not require a signature.</p>
+                <div style="text-align: center; margin-top: 16px;">
+                    <span style="padding: 6px 18px; border-radius: 999px; font-size: 10px; font-weight: 900; letter-spacing: 2px;
+                        background:${inv.paymentStatus === 'paid' ? '#dcfce7' : '#fee2e2'};
+                        color:${inv.paymentStatus === 'paid' ? '#15803d' : '#dc2626'};">
+                        ${inv.paymentStatus.toUpperCase()}
+                    </span>
                 </div>
             </div>
-        `;
+        </div>
+
+        <!-- FOOTER -->
+        <div style="text-align: center; margin-top: 60px;">
+            <p style="font-size: 14px; font-weight: 600;">Thanks for riding with RoadRomeo</p>
+            <p style="font-size: 11px; color: #aaa; font-style: italic;">Computer generated invoice • No signature required</p>
+        </div>
+
+    </div>
+</div>
+`;
+
 
         document.body.appendChild(tempDiv);
 
@@ -224,6 +231,7 @@ export default function BillingManagement() {
             const imgY = 0;
 
             pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+
             pdf.save(`${inv.invoiceNumber}.pdf`);
         } catch (error) {
             console.error('Error generating PDF:', error);
