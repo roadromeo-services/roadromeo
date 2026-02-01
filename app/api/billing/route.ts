@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
     // Auto-generate invoice number if not provided
     if (!data.invoiceNumber) {
-        data.invoiceNumber = `INV-${Date.now()}`;
+        data.invoiceNumber = `EST-${Date.now()}`;
     }
 
     const bill = await Billing.create(data);

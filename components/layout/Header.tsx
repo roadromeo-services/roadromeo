@@ -37,7 +37,7 @@ export const Header = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-primary/20">
-              <span className="text-white font-black text-xl">R</span>
+              <span className="text-white font-black text-xl">RR</span>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-black text-slate-900 leading-none">Road Romeo</span>
