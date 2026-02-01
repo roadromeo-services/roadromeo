@@ -118,7 +118,7 @@ export default function BillingManagement() {
             </div>
 
             <div style="text-align: right;">
-                <div style="font-size: 46px; font-weight: 900; opacity: 0.15; letter-spacing: 4px;">INVOICE</div>
+                <div style="font-size: 46px; font-weight: 900; opacity: 0.15; letter-spacing: 4px;">ESTIMATE</div>
                 <p style="font-size: 14px; font-weight: 700; margin: 6px 0;">${inv.invoiceNumber}</p>
                 <p style="font-size: 13px; color: #9ca3af;">${new Date(inv.createdAt).toLocaleDateString()}</p>
             </div>
@@ -196,8 +196,8 @@ export default function BillingManagement() {
 
         <!-- FOOTER -->
         <div style="text-align: center; margin-top: 60px;">
-            <p style="font-size: 14px; font-weight: 600;">Thanks for riding with RoadRomeo</p>
-            <p style="font-size: 11px; color: #aaa; font-style: italic;">Computer generated invoice • No signature required</p>
+            <p style="font-size: 14px; font-weight: 600;">Thanks for riding with Road Romeo</p>
+            <p style="font-size: 11px; color: #aaa; font-style: italic;">Computer generated estimate • No signature required</p>
         </div>
 
     </div>
@@ -261,7 +261,7 @@ export default function BillingManagement() {
                         onClick={() => {
                             setIsAdding(true);
                             setEditData({
-                                invoiceNumber: `INV-${Date.now()}`,
+                                invoiceNumber: `EST-${Date.now()}`,
                                 items: [{ description: '', quantity: 1, price: 0 }],
                                 tax: 0,
                                 discount: 0,
@@ -272,7 +272,7 @@ export default function BillingManagement() {
                         className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-red-600/20"
                     >
                         <Plus className="w-5 h-5" />
-                        New Invoice
+                        New Estimate
                     </button>
                 )}
             </div>
@@ -315,7 +315,7 @@ export default function BillingManagement() {
                                     </div>
                                 </div>
                                 <div className="text-right space-y-2">
-                                    <h2 className="text-5xl font-black text-zinc-200 uppercase">Invoice</h2>
+                                    <h2 className="text-5xl font-black text-zinc-200 uppercase">Estimate</h2>
                                     <div className="space-y-1">
                                         <p className="font-bold text-zinc-900">{printingInvoice.invoiceNumber}</p>
                                         <p className="text-zinc-500">{new Date(printingInvoice.createdAt).toLocaleDateString()}</p>
@@ -435,7 +435,7 @@ export default function BillingManagement() {
                             {/* Footer */}
                             <div className="pt-20 text-center space-y-4">
                                 <p className="text-lg font-bold">Thank you for choosing RoadRomeo!</p>
-                                <p className="text-xs text-zinc-400 italic">This is a computer generated invoice and does not require a signature.</p>
+                                <p className="text-xs text-zinc-400 italic">This is a computer generated estimate and does not require a signature.</p>
                             </div>
                         </div>
                     </div>
@@ -445,7 +445,7 @@ export default function BillingManagement() {
             {(isAdding || editingId) && (
                 <div className="bg-white rounded-3xl border border-zinc-200 p-8 shadow-xl animate-in fade-in slide-in-from-top-4 print:hidden">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-xl font-bold text-zinc-900">Invoice: {editData.invoiceNumber}</h3>
+                        <h3 className="text-xl font-bold text-zinc-900">Estimate: {editData.invoiceNumber}</h3>
                         <div className="flex items-center gap-3">
                             <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all">
                                 <Save className="w-4 h-4" /> Save
@@ -640,7 +640,7 @@ export default function BillingManagement() {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-zinc-50 text-[10px] font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-100">
-                                    <th className="px-8 py-4">Invoice #</th>
+                                    <th className="px-8 py-4">Estimate #</th>
                                     <th className="px-8 py-4">Status</th>
                                     <th className="px-8 py-4">Total Amount</th>
                                     <th className="px-8 py-4">Date</th>
