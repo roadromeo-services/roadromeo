@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { siteConfig } from '@/lib/config/site';
 
 export default function BillingManagement() {
     const { billing, updateBilling, deleteBilling, createBilling, loading, bookings } = useData();
@@ -107,7 +108,7 @@ export default function BillingManagement() {
                         <p style="color: #666; font-size: 14px; margin: 5px 0;">Professional Bike Service & Repairs</p>
                         <div style="color: #999; font-size: 12px; margin-top: 10px;">
                             <p style="margin: 2px 0;">Pune, Maharashtra, India</p>
-                            <p style="margin: 2px 0;">Support: +91 93596 66964</p>
+                            <p style="margin: 2px 0;">Support: +91 ${siteConfig.contact.phone}</p>
                         </div>
                     </div>
                     <div style="text-align: right;">
@@ -302,7 +303,7 @@ export default function BillingManagement() {
                                     <p className="text-zinc-500 font-medium">Professional Bike Service & Repairs</p>
                                     <div className="text-sm text-zinc-400 space-y-1">
                                         <p>Pune, Maharashtra, India</p>
-                                        <p>Support: +91 93596 66964</p>
+                                        <p>Support: +91 {siteConfig.contact.phone}</p>
                                     </div>
                                 </div>
                                 <div className="text-right space-y-2">
