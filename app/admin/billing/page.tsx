@@ -89,161 +89,200 @@ export default function BillingManagement() {
         const inv = printingInvoice;
         const customerName = inv.customerName || 'Direct Customer';
         const vehicleNumber = inv.vehicleNumber || 'N/A';
-        const subtotal = inv.items.reduce((acc: number, i: any) => acc + (i.price * i.quantity), 0);
+        const subtotal = inv.items.reduce(
+            (acc: number, i: any) => acc + i.price * i.quantity,
+            0
+        );
 
-        // Create a temporary div with clean HTML
         const tempDiv = document.createElement('div');
         tempDiv.style.position = 'absolute';
         tempDiv.style.left = '-9999px';
-        tempDiv.style.width = '800px';
-        tempDiv.style.padding = '40px';
-        tempDiv.style.backgroundColor = '#ffffff';
-        tempDiv.style.fontFamily = 'Arial, sans-serif';
+        tempDiv.style.width = '820px';
+        tempDiv.style.background = '#ffffff';
 
         tempDiv.innerHTML = `
-<div style="max-width: 820px; margin: 0 auto; background: #ffffff; font-family: Inter, system-ui, -apple-system;">
+        <style>
+        @font-face {
+        font-family: 'InterPDF';
+        src: url('/fonts/Inter-Regular.ttf') format('truetype');
+        font-weight: 400;
+        }
+        @font-face {
+        font-family: 'InterPDF';
+        src: url('/fonts/Inter-SemiBold.ttf') format('truetype');
+        font-weight: 600;
+        }
+        @font-face {
+        font-family: 'InterPDF';
+        src: url('/fonts/Inter-Bold.ttf') format('truetype');
+        font-weight: 700;
+        }
+        @font-face {
+        font-family: 'InterPDF';
+        src: url('/fonts/Inter-Black.ttf') format('truetype');
+        font-weight: 900;
+        }
 
-    <!-- TOP BRAND BAR -->
-    <div style="background: linear-gradient(135deg, #111 0%, #1f1f1f 100%); padding: 36px 40px; color: white;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        * {
+        box-sizing: border-box;
+        }
+
+        body {
+        font-family: InterPDF, system-ui, -apple-system, sans-serif;
+        line-height: 1.45;
+        }
+        </style>
+
+        <div style="max-width:820px;margin:0 auto;font-family:InterPDF,system-ui,-apple-system;">
+
+        <!-- HEADER -->
+        <div style="background:linear-gradient(135deg,#111 0%,#1f1f1f 100%);padding:48px 48px;color:#fff;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
-                <div style="display: flex; align-items: center; gap: 14px;">
-                    <div style="width: 52px; height: 52px; background: #dc2626; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px;">RR</div>
-                    <div>
-                        <h1 style="font-size: 30px; font-weight: 900; margin: 0; letter-spacing: 1px;">
-                            ROAD<span style="color: #dc2626;">ROMEO</span>
-                        </h1>
-                        <p style="margin: 4px 0 0; font-size: 13px; color: #bbb;">Professional Bike Service & Repairs</p>
+                <div style="display:flex;align-items:center;gap:16px;">
+                <div style="width:56px;height:56px;background:#dc2626;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;">
+                    RR
+                </div>
+                <div>
+                    <div style="font-size:30px;font-weight:900;line-height:1.1;">
+                    ROAD<span style="color:#dc2626;"> ROMEO</span>
+                    </div>
+                    <div style="font-size:13px;color:#bbb;margin-top:4px;">
+                    Professional Bike Service & Repairs
                     </div>
                 </div>
-                <p style="margin-top: 14px; font-size: 12px; color: #9ca3af;">
-                    Pune, Maharashtra • Support: +91 ${siteConfig.contact.phone}
-                </p>
+                </div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:16px;">
+                Pune, Maharashtra • Support: +91 ${siteConfig.contact.phone}
+                </div>
             </div>
 
-            <div style="text-align: right;">
-                <div style="font-size: 46px; font-weight: 900; opacity: 0.15; letter-spacing: 4px;"></div>
-                <p style="font-size: 14px; font-weight: 700; margin: 6px 0;">${inv.invoiceNumber}</p>
-                <p style="font-size: 13px; color: #9ca3af;">${new Date(inv.createdAt).toLocaleDateString()}</p>
+            <div style="text-align:right;">
+                <div style="font-size:14px;font-weight:700;">${inv.invoiceNumber}</div>
+                <div style="font-size:13px;color:#9ca3af;margin-top:6px;">
+                ${new Date(inv.createdAt).toLocaleDateString()}
+                </div>
+            </div>
             </div>
         </div>
-    </div>
 
-    <!-- BODY -->
-    <div style="padding: 40px;">
+        <!-- BODY -->
+        <div style="padding:48px;">
 
-        <!-- CUSTOMER + VEHICLE -->
-        <div style="display: flex; gap: 50px; margin-bottom: 40px;">
-            <div style="flex: 1;">
-                <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; margin-bottom: 10px;">BILLED TO</div>
-                <p style="font-size: 15px; font-weight: 700; margin: 4px 0;">${customerName}</p>
-                ${inv.phoneNumber ? `<p style="font-size: 13px; color: #666;">+91 ${inv.phoneNumber}</p>` : ''}
-                ${inv.address ? `<p style="font-size: 13px; color: #666;">${inv.address}</p>` : ''}
+            <!-- BILLING -->
+            <div style="display:flex;gap:48px;margin-bottom:48px;">
+            <div style="flex:1;">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:#9ca3af;margin-bottom:12px;">
+                BILLED TO
+                </div>
+                <div style="font-size:15px;font-weight:700;">${customerName}</div>
+                ${inv.phoneNumber ? `<div style="font-size:13px;color:#666;margin-top:6px;">+91 ${inv.phoneNumber}</div>` : ''}
+                ${inv.address ? `<div style="font-size:13px;color:#666;margin-top:6px;">${inv.address}</div>` : ''}
             </div>
 
-            <div style="flex: 1;">
-                <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; margin-bottom: 10px;">VEHICLE</div>
-                ${vehicleNumber !== 'N/A' ? `<p style="font-size: 15px; font-weight: 700; text-transform: uppercase;">Vehicle</p>` : ''}
-                <span style="display: inline-block; margin-top: 8px; padding: 6px 14px; background: #111; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;">
+            <div style="flex:1;">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:#9ca3af;margin-bottom:12px;">
+                VEHICLE
+                </div>
+                <span style=" display:inline-flex; align-items:center; justify-content:center;margin-top:8px;padding:8px 16px;background:#111;color:#fff;font-size:13px;font-weight:800;border-radius:8px;">
                     ${vehicleNumber}
                 </span>
             </div>
-        </div>
+            </div>
 
-        <!-- ITEMS -->
-        <table style="width: 100%; border-collapse: collapse;">
+            <!-- ITEMS -->
+            <table style="width:100%;border-collapse:collapse;">
             <thead>
                 <tr>
-                    <th style="padding: 12px 0; text-align: left; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">DESCRIPTION</th>
-                    <th style="text-align: center; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">QTY</th>
-                    <th style="text-align: right; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">PRICE</th>
-                    <th style="text-align: right; font-size: 11px; letter-spacing: 2px; color: #9ca3af;">TOTAL</th>
+                <th style="text-align:left;font-size:11px;letter-spacing:.12em;color:#9ca3af;padding-bottom:12px;">DESCRIPTION</th>
+                <th style="text-align:center;font-size:11px;letter-spacing:.12em;color:#9ca3af;">QTY</th>
+                <th style="text-align:right;font-size:11px;letter-spacing:.12em;color:#9ca3af;">PRICE</th>
+                <th style="text-align:right;font-size:11px;letter-spacing:.12em;color:#9ca3af;">TOTAL</th>
                 </tr>
             </thead>
             <tbody>
-                ${inv.items.map((item: any) => `
-                <tr style="border-bottom: 1px solid #f1f1f1;">
-                    <td style="padding: 4px 0; font-weight: 600;">${item.description}</td>
-                    <td style="text-align: center; color: #666;">${item.quantity}</td>
-                    <td style="text-align: right; color: #666;">₹${item.price}</td>
-                    <td style="text-align: right; font-weight: 700;">₹${item.price * item.quantity}</td>
+                ${inv.items
+                .map(
+                    (item: any) => `
+                <tr style="border-bottom:1px solid #f1f1f1;height:40px;">
+                    <td style="font-weight:600;">${item.description}</td>
+                    <td style="text-align:center;color:#666;">${item.quantity}</td>
+                    <td style="text-align:right;color:#666;">₹${item.price}</td>
+                    <td style="text-align:right;font-weight:700;">₹${item.price * item.quantity}</td>
                 </tr>
-                `).join('')}
+                `
+                )
+                .join('')}
             </tbody>
-        </table>
+            </table>
 
-        <!-- TOTAL CARD -->
-        <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
-            <div style="width: 300px; background: #fafafa; border-radius: 16px; padding: 24px;">
-                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px;">
-                    <span>Subtotal</span><span>₹${subtotal}</span>
+            <!-- TOTAL -->
+            <div style="display:flex;justify-content:flex-end;margin-top:48px;">
+            <div style="width:320px;background:#fafafa;border-radius:16px;padding:28px;">
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:12px;">
+                <span>Subtotal</span><span>₹${subtotal}</span>
                 </div>
-                
-                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 16px;">
-                    <span>Discount</span><span style="color:#dc2626;">-₹${inv.discount || 0}</span>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:16px;">
+                <span>Discount</span><span style="color:#dc2626;">-₹${inv.discount || 0}</span>
                 </div>
-
-                <div style="border-top: 2px solid #111; padding-top: 14px; display: flex; justify-content: space-between;">
-                    <span style="font-weight: 900;">GRAND TOTAL</span>
-                    <span style="font-size: 22px; font-weight: 900; color: #dc2626;">₹${inv.totalAmount}</span>
+                <div style="border-top:2px solid #111;padding-top:16px;display:flex;justify-content:space-between;">
+                <span style="font-weight:900;">GRAND TOTAL</span>
+                <span style="font-size:22px;font-weight:900;color:#dc2626;">₹${inv.totalAmount}</span>
                 </div>
-
-                <div style="text-align: center; margin-top: 16px;">
-                    <span style="padding: 6px 18px; border-radius: 999px; font-size: 10px; font-weight: 900; letter-spacing: 2px;
-                        background:${inv.paymentStatus === 'paid' ? '#dcfce7' : '#fee2e2'};
-                        color:${inv.paymentStatus === 'paid' ? '#15803d' : '#dc2626'};">
-                        ${inv.paymentStatus.toUpperCase()}
-                    </span>
+                <div style="text-align:center;margin-top:16px;">
+                <span style="padding:6px 18px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.12em;">
+                    ${inv.paymentStatus.toUpperCase()}
+                </span>
                 </div>
             </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div style="text-align:center;margin-top:64px;">
+            <div style="font-size:14px;font-weight:600;">Thanks for riding with Road Romeo</div>
+            <div style="font-size:11px;color:#aaa;font-style:italic;margin-top:6px;">
+                Computer generated estimate • No signature required
+            </div>
+            </div>
+
         </div>
-
-        <!-- FOOTER -->
-        <div style="text-align: center; margin-top: 60px;">
-            <p style="font-size: 14px; font-weight: 600;">Thanks for riding with Road Romeo</p>
-            <p style="font-size: 11px; color: #aaa; font-style: italic;">Computer generated estimate • No signature required</p>
         </div>
-
-    </div>
-</div>
-`;
-
+        `;
 
         document.body.appendChild(tempDiv);
+
+        // 🔑 wait for fonts to load
+        await document.fonts.ready;
 
         try {
             const canvas = await html2canvas(tempDiv, {
                 scale: 2,
-                logging: false,
+                backgroundColor: '#ffffff',
                 useCORS: true,
-                backgroundColor: '#ffffff'
             });
 
             const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
-            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-            const imgX = (pdfWidth - imgWidth * ratio) / 2;
-            const imgY = 0;
+            const ratio = Math.min(pdfWidth / canvas.width, pdfHeight / canvas.height);
 
-            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            pdf.addImage(
+                imgData,
+                'PNG',
+                (pdfWidth - canvas.width * ratio) / 2,
+                0,
+                canvas.width * ratio,
+                canvas.height * ratio
+            );
 
             pdf.save(`${inv.invoiceNumber}.pdf`);
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            alert('Failed to generate PDF. Please try again.');
         } finally {
             document.body.removeChild(tempDiv);
         }
     };
+
 
     if (loading) {
         return (
@@ -421,7 +460,7 @@ export default function BillingManagement() {
 
                             {/* Footer */}
                             <div className="pt-20 text-center space-y-4">
-                                <p className="text-lg font-bold">Thank you for choosing RoadRomeo!</p>
+                                <p className="text-lg font-bold">Thank you for choosing Road Romeo!</p>
                                 <p className="text-xs text-zinc-400 italic">This is a computer generated estimate and does not require a signature.</p>
                             </div>
                         </div>
