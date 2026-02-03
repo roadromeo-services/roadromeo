@@ -1,11 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBilling extends Document {
-    bookingId?: mongoose.Types.ObjectId;
     invoiceNumber: string;
     customerName?: string;
     vehicleNumber?: string;
-    items: {
+    address?: string;
+    phoneNumber?: string;
+    items?: {
         description: string;
         quantity: number;
         price: number;
@@ -18,10 +19,11 @@ export interface IBilling extends Document {
 }
 
 const BillingSchema: Schema = new Schema({
-    bookingId: { type: Schema.Types.ObjectId, ref: 'Booking' },
     invoiceNumber: { type: String, required: true, unique: true },
     customerName: { type: String },
     vehicleNumber: { type: String },
+    address: { type: String },
+    phoneNumber: { type: String },
     items: [{
         description: { type: String, required: true },
         quantity: { type: Number, required: true, default: 1 },
@@ -38,4 +40,9 @@ const BillingSchema: Schema = new Schema({
     paymentMethod: { type: String },
 }, { timestamps: true });
 
-export default mongoose.models.Billing || mongoose.model<IBilling>('Billing', BillingSchema);
+// Delete cached model to ensure schema changes are picked up
+if (mongoose.models.Billing) {
+    delete mongoose.models.Billing;
+}
+
+export default mongoose.model<IBilling>('Billing', BillingSchema);

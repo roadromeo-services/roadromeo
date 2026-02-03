@@ -6,13 +6,14 @@ import { siteConfig } from '@/lib/config/site';
 import { useData } from '@/components/providers/DataProvider';
 
 export const Contact = () => {
-  const { bikes: bikeBrands, services, addBooking } = useData();
+  const { bikes: bikeBrands, addBooking } = useData();
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
-  const [selectedService, setSelectedService] = useState('');
+  const [address, setAddress] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const brandOptions = bikeBrands.map(brand => ({
     value: brand._id,
@@ -26,18 +27,27 @@ export const Contact = () => {
     }))
     : [];
 
-  const serviceOptions = services.map(service => ({
-    value: service._id,
-    label: service.name,
-  }));
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!name.trim()) newErrors.name = 'Please enter your name';
+    if (!/^[0-9]{10}$/.test(phone)) newErrors.phone = 'Enter a valid 10-digit number';
+    if (!selectedBrand) newErrors.brand = 'Please select a brand';
+    if (!selectedModel) newErrors.model = 'Please select a model';
+    if (!address.trim()) newErrors.address = 'Please enter your pickup address';
+    return newErrors;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     const brandObj = bikeBrands.find(b => b._id === selectedBrand);
-    const serviceObj = services.find(s => s._id === selectedService);
 
     const brandName = brandObj?.name || selectedBrand;
-    const serviceName = serviceObj?.name || selectedService;
 
     // Save to database
     try {
@@ -46,9 +56,9 @@ export const Contact = () => {
         phoneNumber: phone,
         bikeBrand: brandName,
         bikeModel: selectedModel,
-        serviceType: serviceName,
+        address: address,
         bookingDate: new Date(),
-        totalAmount: serviceObj?.price || 0,
+        totalAmount: 0,
         status: 'pending',
         notes: message || 'Booked from Contact page'
       });
@@ -56,7 +66,7 @@ export const Contact = () => {
       console.error('Database booking failed, but proceeding to WhatsApp:', err);
     }
 
-    const whatsappMessage = `Hi! I want to book a service.\n\nName: ${name}\nPhone: ${phone}\nBike: ${brandName} ${selectedModel}\nService: ${serviceName}\nMessage: ${message}`;
+    const whatsappMessage = `Hi! I want to book a service.\n\nName: ${name}\nPhone: ${phone}\nAddress: ${address}\nBike: ${brandName} ${selectedModel}\nMessage: ${message}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
     window.open(whatsappLink, '_blank');
   };
@@ -89,13 +99,16 @@ export const Contact = () => {
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  label="Your Name"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
+                <div>
+                  <Input
+                    label="Your Name"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setErrors(prev => ({ ...prev, name: '' })); }}
+                    className={errors.name ? '!border-red-500' : ''}
+                  />
+                  {errors.name && <p className="text-red-500 text-xs font-medium mt-1">{errors.name}</p>}
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-1">
@@ -108,47 +121,55 @@ export const Contact = () => {
                     <input
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setErrors(prev => ({ ...prev, phone: '' })); }}
                       placeholder="Enter your number"
-                      pattern="[0-9]{10}"
                       maxLength={10}
-                      required
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className={`flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${errors.phone ? '!border-red-500' : ''}`}
                     />
                   </div>
+                  {errors.phone && <p className="text-red-500 text-xs font-medium mt-1">{errors.phone}</p>}
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <Select
-                    label="Bike Brand"
-                    options={brandOptions}
-                    placeholder="Select Brand"
-                    value={selectedBrand}
-                    onChange={(e) => {
-                      setSelectedBrand(e.target.value);
-                      setSelectedModel('');
-                    }}
-                    required
-                  />
-                  <Select
-                    label="Bike Model"
-                    options={modelOptions}
-                    placeholder="Select Model"
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    disabled={!selectedBrand}
-                    required
-                  />
+                  <div>
+                    <Select
+                      label="Bike Brand"
+                      options={brandOptions}
+                      placeholder="Select Brand"
+                      value={selectedBrand}
+                      onChange={(e) => {
+                        setSelectedBrand(e.target.value);
+                        setSelectedModel('');
+                        setErrors(prev => ({ ...prev, brand: '' }));
+                      }}
+                      className={errors.brand ? '!border-red-500' : ''}
+                    />
+                    {errors.brand && <p className="text-red-500 text-xs font-medium mt-1">{errors.brand}</p>}
+                  </div>
+                  <div>
+                    <Select
+                      label="Bike Model"
+                      options={modelOptions}
+                      placeholder="Select Model"
+                      value={selectedModel}
+                      onChange={(e) => { setSelectedModel(e.target.value); setErrors(prev => ({ ...prev, model: '' })); }}
+                      disabled={!selectedBrand}
+                      className={errors.model ? '!border-red-500' : ''}
+                    />
+                    {errors.model && <p className="text-red-500 text-xs font-medium mt-1">{errors.model}</p>}
+                  </div>
                 </div>
 
-                <Select
-                  label="Service Required"
-                  options={serviceOptions}
-                  placeholder="Select Service"
-                  value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                  required
-                />
+                <div>
+                  <Input
+                    label="Pickup Address"
+                    placeholder="Enter your pickup address"
+                    value={address}
+                    onChange={(e) => { setAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
+                    className={errors.address ? '!border-red-500' : ''}
+                  />
+                  {errors.address && <p className="text-red-500 text-xs font-medium mt-1">{errors.address}</p>}
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-1">

@@ -52,7 +52,6 @@ interface Booking {
 
 interface Billing {
     _id: string;
-    bookingId: string | any;
     invoiceNumber: string;
     items: {
         description: string;

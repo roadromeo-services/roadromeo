@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     await connectDB();
-    const bills = await Billing.find({}).populate('bookingId').sort({ createdAt: -1 });
+    const bills = await Billing.find({}).sort({ createdAt: -1 });
     return NextResponse.json(bills);
 }
 

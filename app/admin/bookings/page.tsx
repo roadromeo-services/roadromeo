@@ -41,12 +41,12 @@ export default function BookingsManagement() {
 
         try {
             await createBilling({
-                bookingId: booking._id,
-                items: [
-                    { description: booking.serviceType, quantity: 1, price: booking.totalAmount }
-                ],
-                totalAmount: booking.totalAmount,
-                paymentStatus: 'pending'
+                totalAmount: booking.totalAmount || 0,
+                paymentStatus: 'pending',
+                customerName: booking.customerName,
+                phoneNumber: booking.phoneNumber,
+                vehicleNumber: booking.vehicleNumber,
+                address: booking.address,
             });
             alert('Invoice generated successfully! View it in the Billing section.');
         } catch (err) {

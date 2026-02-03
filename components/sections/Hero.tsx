@@ -11,10 +11,11 @@ export const Hero = () => {
   const [name, setName] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
-  const [selectedService, setSelectedService] = useState('');
+  const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { bikes: bikeBrands, services, addBooking } = useData();
+  const { bikes: bikeBrands, addBooking } = useData();
 
   const brandOptions = bikeBrands.map(brand => ({
     value: brand._id,
@@ -28,18 +29,27 @@ export const Hero = () => {
     }))
     : [];
 
-  const serviceOptions = services.map(service => ({
-    value: service._id,
-    label: service.name,
-  }));
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!name.trim() || !/^[a-zA-Z\s]{2,}$/.test(name.trim())) newErrors.name = 'Enter a valid name (min 2 letters)';
+    if (!selectedBrand) newErrors.brand = 'Please select a brand';
+    if (!selectedModel) newErrors.model = 'Please select a model';
+    if (!address.trim()) newErrors.address = 'Please enter your pickup address';
+    if (!/^[0-9]{10}$/.test(phone)) newErrors.phone = 'Enter a valid 10-digit number';
+    return newErrors;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     const brandObj = bikeBrands.find(b => (b._id) === selectedBrand);
-    const serviceObj = services.find(s => (s._id) === selectedService);
 
     const brandName = brandObj?.name || selectedBrand;
-    const serviceName = serviceObj?.name || selectedService;
 
     // Save to database
     try {
@@ -48,9 +58,9 @@ export const Hero = () => {
         phoneNumber: phone,
         bikeBrand: brandName,
         bikeModel: selectedModel,
-        serviceType: serviceName,
+        address: address,
         bookingDate: new Date(),
-        totalAmount: serviceObj?.price || 0,
+        totalAmount: 0,
         status: 'pending',
         notes: 'Booked from Hero section'
       });
@@ -58,7 +68,7 @@ export const Hero = () => {
       console.error('Database booking failed, but proceeding to WhatsApp:', err);
     }
 
-    const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}%0AService: ${serviceName}`;
+    const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0AAddress: ${address}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${message}`;
     window.open(whatsappLink, '_blank');
   };
@@ -135,13 +145,12 @@ export const Hero = () => {
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => { setName(e.target.value); setErrors(prev => ({ ...prev, name: '' })); }}
                     placeholder="Enter your name"
-                    pattern="[a-zA-Z\s]{2,}"
-                    required
-                    className="input-premium !pl-14"
+                    className={`input-premium !pl-14 ${errors.name ? '!border-red-500' : ''}`}
                   />
                 </div>
+                {errors.name && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.name}</p>}
               </div>
 
               <div className="grid sm:grid-cols-2 gap-6">
@@ -154,10 +163,11 @@ export const Hero = () => {
                     onChange={(e) => {
                       setSelectedBrand(e.target.value);
                       setSelectedModel('');
+                      setErrors(prev => ({ ...prev, brand: '' }));
                     }}
-                    required
-                    className="!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300"
+                    className={`!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300 ${errors.brand ? '!border-red-500' : ''}`}
                   />
+                  {errors.brand && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.brand}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700 ml-1">Model</label>
@@ -165,24 +175,29 @@ export const Hero = () => {
                     options={modelOptions}
                     placeholder="Select Model"
                     value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    onChange={(e) => { setSelectedModel(e.target.value); setErrors(prev => ({ ...prev, model: '' })); }}
                     disabled={!selectedBrand}
-                    required
-                    className="!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300 disabled:opacity-50"
+                    className={`!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300 disabled:opacity-50 ${errors.model ? '!border-red-500' : ''}`}
                   />
+                  {errors.model && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.model}</p>}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">Service Type</label>
-                <Select
-                  options={serviceOptions}
-                  placeholder="What does your bike need?"
-                  value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                  required
-                  className="!bg-slate-50 !border-slate-100 !rounded-2xl !py-4 focus:!ring-primary/10 transition-all duration-300"
-                />
+                <label className="text-sm font-bold text-slate-700 ml-1">Pickup Address</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => { setAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
+                    placeholder="Enter your pickup address"
+                    className={`input-premium !pl-14 ${errors.address ? '!border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.address && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.address}</p>}
               </div>
 
               <div className="space-y-2">
@@ -197,13 +212,13 @@ export const Hero = () => {
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                       setPhone(val);
+                      setErrors(prev => ({ ...prev, phone: '' }));
                     }}
                     placeholder="Enter 10-digit number"
-                    pattern="[0-9]{10}"
-                    required
-                    className="input-premium !pl-16"
+                    className={`input-premium !pl-16 ${errors.phone ? '!border-red-500' : ''}`}
                   />
                 </div>
+                {errors.phone && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.phone}</p>}
               </div>
 
               <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">

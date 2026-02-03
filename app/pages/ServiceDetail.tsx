@@ -19,7 +19,9 @@ export const ServiceDetail = () => {
 
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
+  const [userAddress, setUserAddress] = useState('');
   const [isBooking, setIsBooking] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const service = slug ? services.find(s => s.slug === slug) : null;
 
@@ -33,8 +35,22 @@ export const ServiceDetail = () => {
 
   const Icon = getIcon(service.icon);
 
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!userName.trim()) newErrors.name = 'Please enter your name';
+    if (!/^[0-9]{10}$/.test(userPhone)) newErrors.phone = 'Enter a valid 10-digit number';
+    if (!userAddress.trim()) newErrors.address = 'Please enter your pickup address';
+    return newErrors;
+  };
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     setIsBooking(true);
 
     try {
@@ -43,19 +59,20 @@ export const ServiceDetail = () => {
         phoneNumber: userPhone,
         bikeBrand: 'Unknown',
         bikeModel: 'Specified in detail',
-        serviceType: service.name,
+        address: userAddress,
         bookingDate: new Date(),
         totalAmount: service.price,
         status: 'pending',
         notes: `Booked from ${service.name} detail page`
       });
 
-      const whatsappMessage = `Hi! I want to book ${service.name} for my bike.\n\nName: ${userName}\nPhone: ${userPhone}`;
+      const whatsappMessage = `Hi! I want to book ${service.name} for my bike.\n\nName: ${userName}\nPhone: ${userPhone}\nAddress: ${userAddress}`;
       const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
       window.open(whatsappLink, '_blank');
 
       setUserName('');
       setUserPhone('');
+      setUserAddress('');
     } catch (err) {
       console.error('Booking failed:', err);
     } finally {
@@ -157,23 +174,32 @@ export const ServiceDetail = () => {
                       <label className="block text-sm font-bold text-text-secondary mb-1">Your Name</label>
                       <input
                         value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
-                        required
-                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors"
+                        onChange={(e) => { setUserName(e.target.value); setErrors(prev => ({ ...prev, name: '' })); }}
+                        className={`w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors ${errors.name ? '!border-red-500' : ''}`}
                         placeholder="e.g. Rahul Kumar"
                       />
+                      {errors.name && <p className="text-red-500 text-xs font-medium mt-1">{errors.name}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-text-secondary mb-1">Phone Number</label>
                       <input
                         value={userPhone}
-                        onChange={(e) => setUserPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        onChange={(e) => { setUserPhone(e.target.value.replace(/\D/g, '').slice(0, 10)); setErrors(prev => ({ ...prev, phone: '' })); }}
                         type="tel"
-                        required
-                        pattern="[0-9]{10}"
-                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors"
+                        className={`w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors ${errors.phone ? '!border-red-500' : ''}`}
                         placeholder="10-digit mobile number"
                       />
+                      {errors.phone && <p className="text-red-500 text-xs font-medium mt-1">{errors.phone}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-text-secondary mb-1">Pickup Address</label>
+                      <input
+                        value={userAddress}
+                        onChange={(e) => { setUserAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
+                        className={`w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:border-red-600 outline-none transition-colors ${errors.address ? '!border-red-500' : ''}`}
+                        placeholder="Enter your pickup address"
+                      />
+                      {errors.address && <p className="text-red-500 text-xs font-medium mt-1">{errors.address}</p>}
                     </div>
 
                     <div className="pt-2">

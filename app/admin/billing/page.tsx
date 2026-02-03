@@ -77,8 +77,8 @@ export default function BillingManagement() {
     const filteredBilling = billing.filter((bill) => {
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
-        const vehicleNum = bill.vehicleNumber?.toLowerCase() || bill.bookingId?.vehicleNumber?.toLowerCase() || '';
-        const customerName = bill.customerName?.toLowerCase() || bill.bookingId?.customerName?.toLowerCase() || '';
+        const vehicleNum = bill.vehicleNumber?.toLowerCase() || '';
+        const customerName = bill.customerName?.toLowerCase() || '';
         const invoiceNum = bill.invoiceNumber?.toLowerCase() || '';
         return vehicleNum.includes(query) || customerName.includes(query) || invoiceNum.includes(query);
     });
@@ -87,9 +87,8 @@ export default function BillingManagement() {
         if (!printingInvoice) return;
 
         const inv = printingInvoice;
-        const booking = inv.bookingId;
-        const customerName = booking?.customerName || inv.customerName || 'Direct Customer';
-        const vehicleNumber = booking?.vehicleNumber || inv.vehicleNumber || 'N/A';
+        const customerName = inv.customerName || 'Direct Customer';
+        const vehicleNumber = inv.vehicleNumber || 'N/A';
         const subtotal = inv.items.reduce((acc: number, i: any) => acc + (i.price * i.quantity), 0);
 
         // Create a temporary div with clean HTML
@@ -138,13 +137,13 @@ export default function BillingManagement() {
             <div style="flex: 1;">
                 <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; margin-bottom: 10px;">BILLED TO</div>
                 <p style="font-size: 15px; font-weight: 700; margin: 4px 0;">${customerName}</p>
-                ${booking?.phoneNumber ? `<p style="font-size: 13px; color: #666;">+91 ${booking.phoneNumber}</p>` : ''}
-                ${booking?.address ? `<p style="font-size: 13px; color: #666;">${booking.address}</p>` : ''}
+                ${inv.phoneNumber ? `<p style="font-size: 13px; color: #666;">+91 ${inv.phoneNumber}</p>` : ''}
+                ${inv.address ? `<p style="font-size: 13px; color: #666;">${inv.address}</p>` : ''}
             </div>
 
             <div style="flex: 1;">
                 <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; margin-bottom: 10px;">VEHICLE</div>
-                ${booking ? `<p style="font-size: 15px; font-weight: 700; text-transform: uppercase;">${booking.bikeBrand} ${booking.bikeModel}</p>` : ''}
+                ${vehicleNumber !== 'N/A' ? `<p style="font-size: 15px; font-weight: 700; text-transform: uppercase;">Vehicle</p>` : ''}
                 <span style="display: inline-block; margin-top: 8px; padding: 6px 14px; background: #111; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 1px; border-radius: 8px;">
                     ${vehicleNumber}
                 </span>
@@ -332,29 +331,24 @@ export default function BillingManagement() {
                             <div className="grid grid-cols-2 gap-12 py-10 border-y border-zinc-100">
                                 <div className="space-y-4">
                                     <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest">Bill To:</h4>
-                                    {printingInvoice.bookingId ? (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2 text-zinc-900 font-bold">
-                                                <User className="w-4 h-4 text-red-600" />
-                                                <p>{printingInvoice.bookingId.customerName}</p>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-zinc-500">
-                                                <Phone className="w-4 h-4" />
-                                                <p>+91 {printingInvoice.bookingId.phoneNumber}</p>
-                                            </div>
-                                            {printingInvoice.bookingId.address && (
-                                                <div className="flex items-start gap-2 text-zinc-500 max-w-sm">
-                                                    <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
-                                                    <p className="text-sm leading-relaxed">{printingInvoice.bookingId.address}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : printingInvoice.customerName ? (
+                                    {printingInvoice.customerName ? (
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-2 text-zinc-900 font-bold">
                                                 <User className="w-4 h-4 text-red-600" />
                                                 <p>{printingInvoice.customerName}</p>
                                             </div>
+                                            {printingInvoice.phoneNumber && (
+                                                <div className="flex items-center gap-2 text-zinc-500">
+                                                    <Phone className="w-4 h-4" />
+                                                    <p>+91 {printingInvoice.phoneNumber}</p>
+                                                </div>
+                                            )}
+                                            {printingInvoice.address && (
+                                                <div className="flex items-start gap-2 text-zinc-500 max-w-sm">
+                                                    <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
+                                                    <p className="text-sm leading-relaxed">{printingInvoice.address}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <p className="text-zinc-500 italic">Direct Customer</p>
@@ -362,19 +356,7 @@ export default function BillingManagement() {
                                 </div>
                                 <div className="space-y-4">
                                     <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest">Vehicle Details:</h4>
-                                    {printingInvoice.bookingId ? (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2 text-zinc-900 font-bold uppercase">
-                                                <Bike className="w-4 h-4 text-red-600" />
-                                                <p>{printingInvoice.bookingId.bikeBrand} {printingInvoice.bookingId.bikeModel}</p>
-                                            </div>
-                                            {printingInvoice.bookingId.vehicleNumber && (
-                                                <div className="px-3 py-1 bg-zinc-100 rounded-lg w-fit text-sm font-black border border-zinc-200 uppercase">
-                                                    {printingInvoice.bookingId.vehicleNumber}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : printingInvoice.vehicleNumber ? (
+                                    {printingInvoice.vehicleNumber ? (
                                         <div className="space-y-3">
                                             <div className="px-3 py-1 bg-zinc-100 rounded-lg w-fit text-sm font-black border border-zinc-200 uppercase">
                                                 <Bike className="w-4 h-4 text-red-600 inline mr-2" />
@@ -462,40 +444,6 @@ export default function BillingManagement() {
                     </div>
 
                     <div className="space-y-6">
-                        {/* Link to Booking */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-black uppercase text-zinc-400">Link to Booking (Optional)</label>
-                            <select
-                                value={editData.bookingId || ''}
-                                onChange={(e) => {
-                                    const selectedBooking = bookings.find(b => b._id === e.target.value);
-                                    if (selectedBooking) {
-                                        setEditData({
-                                            ...editData,
-                                            bookingId: e.target.value,
-                                            customerName: selectedBooking.customerName,
-                                            vehicleNumber: selectedBooking.vehicleNumber
-                                        });
-                                    } else {
-                                        setEditData({
-                                            ...editData,
-                                            bookingId: '',
-                                            customerName: editData.customerName || '',
-                                            vehicleNumber: editData.vehicleNumber || ''
-                                        });
-                                    }
-                                }}
-                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none focus:border-red-600"
-                            >
-                                <option value="">No Booking (Direct Invoice)</option>
-                                {bookings.map((booking) => (
-                                    <option key={booking._id} value={booking._id}>
-                                        {booking.customerName} - {booking.vehicleNumber || booking.bikeBrand} ({booking.serviceType})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
                         {/* Customer Details */}
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
@@ -692,9 +640,9 @@ export default function BillingManagement() {
                                             <td className="px-8 py-6">
                                                 <p className="font-bold text-zinc-900">{bill.invoiceNumber}</p>
                                                 <p className="text-[10px] text-zinc-400 font-mono">
-                                                    {bill.bookingId?.customerName || bill.customerName || 'Direct'}
-                                                    {(bill.vehicleNumber || bill.bookingId?.vehicleNumber) && (
-                                                        <span className="ml-2 text-red-600">• {bill.vehicleNumber || bill.bookingId?.vehicleNumber}</span>
+                                                    {bill.customerName || 'Direct'}
+                                                    {bill.vehicleNumber && (
+                                                        <span className="ml-2 text-red-600">• {bill.vehicleNumber}</span>
                                                     )}
                                                 </p>
                                             </td>
