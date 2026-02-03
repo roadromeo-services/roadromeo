@@ -4,7 +4,6 @@ import {
   ServicesGrid,
   HowItWorks,
   WhyChooseUs,
-  GoogleReviews,
   BrandsServed,
   AreasServed,
   CTASection,
@@ -17,8 +16,7 @@ export const Home = () => {
       <TrustBadges />
       <ServicesGrid />
       <HowItWorks />
-      <WhyChooseUs />
-      <GoogleReviews />
+      <WhyChooseUs />   
       <BrandsServed />
       <AreasServed />
       <CTASection />

@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import Pricing from '@/models/Pricing';
 import { getServerSession } from 'next-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     await connectDB();
     const pricing = await Pricing.find({}).sort({ price: 1 });

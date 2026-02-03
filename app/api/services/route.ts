@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import Service from '@/models/Service';
 import { getServerSession } from 'next-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     await connectDB();
     const services = await Service.find({}).sort({ createdAt: 1 });

@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import BikeBrand from '@/models/BikeBrand';
 import { getServerSession } from 'next-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     await connectDB();
     const bikes = await BikeBrand.find({}).sort({ name: 1 });

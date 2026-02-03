@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface Service {
     _id: string;
@@ -92,6 +93,9 @@ interface DataContextType extends DataState {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isAdmin = pathname.startsWith('/admin');
+
     const [state, setState] = useState<DataState>({
         services: [],
         pricing: [],
@@ -106,20 +110,29 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         try {
             setState(prev => ({ ...prev, loading: true, error: null }));
 
-            const [servicesRes, pricingRes, bikesRes, bookingsRes, billingRes] = await Promise.all([
+            const commonFetches = [
                 fetch('/api/services'),
                 fetch('/api/pricing'),
                 fetch('/api/bikes'),
-                fetch('/api/bookings'),
-                fetch('/api/billing'),
-            ]);
+            ];
 
-            // Note: billing might return 401 if not logged in, we should handle that gracefully
+            const [servicesRes, pricingRes, bikesRes] = await Promise.all(commonFetches);
+
             const servicesData = await servicesRes.json();
             const pricingData = await pricingRes.json();
             const bikesData = await bikesRes.json();
-            const bookingsData = bookingsRes.ok ? await bookingsRes.json() : [];
-            const billingData = billingRes.ok ? await billingRes.json() : [];
+
+            let bookingsData: any[] = [];
+            let billingData: any[] = [];
+
+            if (isAdmin) {
+                const [bookingsRes, billingRes] = await Promise.all([
+                    fetch('/api/bookings'),
+                    fetch('/api/billing'),
+                ]);
+                bookingsData = bookingsRes.ok ? await bookingsRes.json() : [];
+                billingData = billingRes.ok ? await billingRes.json() : [];
+            }
 
             setState({
                 services: servicesData,
@@ -138,7 +151,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 error: err.message || 'An error occurred while fetching data'
             }));
         }
-    }, []);
+    }, [isAdmin]);
 
     const addBooking = async (bookingData: any) => {
         try {

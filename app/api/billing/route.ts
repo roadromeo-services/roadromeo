@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import Billing from '@/models/Billing';
 import { getServerSession } from 'next-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     const session = await getServerSession();
     if (!session) {
