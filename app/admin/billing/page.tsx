@@ -5,7 +5,7 @@ import { useData } from '@/components/providers/DataProvider';
 import {
     Loader2, Receipt, Search, Plus, Filter, Download,
     Trash2, Edit2, CheckCircle, XCircle, ChevronDown,
-    PlusCircle, MinusCircle, Save, X, Printer, User, Bike, MapPin, Phone
+    PlusCircle, MinusCircle, Save, X, Printer, User, Bike, MapPin, Phone, Share2
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -698,7 +698,21 @@ export default function BillingManagement() {
                                                 {new Date(bill.createdAt).toLocaleDateString()}
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <div className="flex items-center justify-end gap-2 opacity-100 group-hover:text-red-500 transition-all">
+                                                    <button
+                                                        onClick={() => {
+                                                            const billUrl = `${window.location.origin}/bill/${bill._id}`;
+                                                            const msg = `Here's your estimate from Road Romeo!\n\nInvoice: ${bill.invoiceNumber}\nAmount: ₹${bill.totalAmount}\n\nView your e-bill: ${billUrl}`;
+                                                            const wa = bill.phoneNumber
+                                                                ? `https://wa.me/91${bill.phoneNumber}?text=${encodeURIComponent(msg)}`
+                                                                : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                                                            window.open(wa, '_blank');
+                                                        }}
+                                                        className="p-2 text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                        title="Share via WhatsApp"
+                                                    >
+                                                        <Share2 className="w-4 h-4" />
+                                                    </button>
                                                     <button
                                                         onClick={() => setPrintingInvoice(bill)}
                                                         className="p-2 text-zinc-400 hover:text-red-600 hover:bg-zinc-100 rounded-lg transition-all"

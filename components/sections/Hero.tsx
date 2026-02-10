@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Bike, CheckCircle, Smartphone, ShieldCheck, MapPin, User } from 'lucide-react';
+import { Bike, Smartphone, ShieldCheck, MapPin, User } from 'lucide-react';
 import { Button, Select } from '@/components/common';
 import { siteConfig } from '@/lib/config/site';
 import { useEffect } from 'react';
@@ -13,6 +13,7 @@ export const Hero = () => {
   const [selectedModel, setSelectedModel] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
+  const [isPickup, setIsPickup] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { bikes: bikeBrands, addBooking } = useData();
@@ -34,7 +35,7 @@ export const Hero = () => {
     if (!name.trim() || !/^[a-zA-Z\s]{2,}$/.test(name.trim())) newErrors.name = 'Enter a valid name (min 2 letters)';
     if (!selectedBrand) newErrors.brand = 'Please select a brand';
     if (!selectedModel) newErrors.model = 'Please select a model';
-    if (!address.trim()) newErrors.address = 'Please enter your pickup address';
+    if (isPickup && !address.trim()) newErrors.address = 'Please enter your pickup address';
     if (!/^[0-9]{10}$/.test(phone)) newErrors.phone = 'Enter a valid 10-digit number';
     return newErrors;
   };
@@ -58,17 +59,18 @@ export const Hero = () => {
         phoneNumber: phone,
         bikeBrand: brandName,
         bikeModel: selectedModel,
-        address: address,
+        address: isPickup ? address : '',
         bookingDate: new Date(),
         totalAmount: 0,
         status: 'pending',
+        isPickup,
         notes: 'Booked from Hero section'
       });
     } catch (err) {
       console.error('Database booking failed, but proceeding to WhatsApp:', err);
     }
 
-    const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0AAddress: ${address}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}`;
+    const message = `Hi! I want to book a bike service.%0A%0A*Customer Details:*%0AName: ${name}%0APhone: ${phone}%0APickup: ${isPickup ? 'Yes' : 'No'}${isPickup ? `%0AAddress: ${address}` : ''}%0A%0A*Bike Details:*%0ABrand: ${brandName}%0AModel: ${selectedModel}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${message}`;
     window.open(whatsappLink, '_blank');
   };
@@ -183,22 +185,49 @@ export const Hero = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 ml-1">Pickup Address</label>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                    <MapPin className="w-5 h-5" />
+              <label className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer select-none transition-all duration-300 ${isPickup ? 'bg-primary/5 border-primary/30' : 'bg-slate-50 border-slate-100'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${isPickup ? 'bg-primary/15' : 'bg-slate-200/60'}`}>
+                    <MapPin className={`w-5 h-5 transition-colors duration-300 ${isPickup ? 'text-primary' : 'text-slate-400'}`} />
                   </div>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => { setAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
-                    placeholder="Enter your pickup address"
-                    className={`input-premium !pl-14 ${errors.address ? '!border-red-500' : ''}`}
-                  />
+                  <div>
+                    <span className="text-sm font-bold text-slate-700 block">Free Pickup & Drop</span>
+                    <span className="text-xs text-slate-400">We'll pick up & deliver your bike</span>
+                  </div>
                 </div>
-                {errors.address && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.address}</p>}
-              </div>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={isPickup}
+                    onChange={(e) => {
+                      setIsPickup(e.target.checked);
+                      if (!e.target.checked) setErrors(prev => ({ ...prev, address: '' }));
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-7 bg-slate-200 rounded-full peer-checked:bg-primary transition-colors duration-300" />
+                  <div className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 transition-transform duration-300" />
+                </div>
+              </label>
+
+              {isPickup && (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 ml-1">Pickup Address</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => { setAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
+                      placeholder="Enter your pickup address"
+                      className={`input-premium !pl-14 ${errors.address ? '!border-red-500' : ''}`}
+                    />
+                  </div>
+                  {errors.address && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.address}</p>}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 ml-1">Mobile Number</label>
@@ -221,15 +250,8 @@ export const Hero = () => {
                 {errors.phone && <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.phone}</p>}
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-success" />
-                </div>
-                <span className="text-sm font-bold text-slate-700">Free Pickup & Drop included</span>
-              </div>
-
               <Button type="submit" fullWidth className="btn-primary py-5 text-xl shadow-primary/20">
-                Get Free Pickup
+               Book Service
               </Button>
             </form>
           </div>

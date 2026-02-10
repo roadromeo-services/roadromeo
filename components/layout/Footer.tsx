@@ -20,7 +20,7 @@ export const Footer = () => {
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 rotate-3">
-                <span className="text-white font-black text-2xl">R</span>
+                <span className="text-white font-black text-2xl">RR</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-black text-white leading-none tracking-tight">Road Romeo</span>

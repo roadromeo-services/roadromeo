@@ -5,7 +5,7 @@ import { useData } from '@/components/providers/DataProvider';
 import {
     Loader2, Calendar, User, Bike, Mail, Phone, Tag,
     MoreVertical, CheckCircle, Clock, XCircle, PlayCircle,
-    FileText, Trash2, Edit2, ChevronDown, MapPin, Hash, X, Save
+    FileText, Trash2, Edit2, ChevronDown, MapPin, Hash, X, Save, Truck
 } from 'lucide-react';
 
 export default function BookingsManagement() {
@@ -71,12 +71,12 @@ export default function BookingsManagement() {
         );
     }
 
-    const statusColors: any = {
-        pending: 'bg-orange-100 text-orange-600',
-        confirmed: 'bg-blue-100 text-blue-600',
-        'in-progress': 'bg-purple-100 text-purple-600',
-        completed: 'bg-green-100 text-green-600',
-        cancelled: 'bg-red-100 text-red-600',
+    const statusConfig: Record<string, { bg: string; text: string; border: string; icon: any }> = {
+        pending: { bg: 'bg-amber-500/15', text: 'text-amber-700', border: 'border-l-amber-500', icon: Clock },
+        confirmed: { bg: 'bg-blue-500/15', text: 'text-blue-700', border: 'border-l-blue-500', icon: CheckCircle },
+        'in-progress': { bg: 'bg-violet-500/15', text: 'text-violet-700', border: 'border-l-violet-500', icon: PlayCircle },
+        completed: { bg: 'bg-emerald-500/15', text: 'text-emerald-700', border: 'border-l-emerald-500', icon: CheckCircle },
+        cancelled: { bg: 'bg-red-500/15', text: 'text-red-700', border: 'border-l-red-500', icon: XCircle },
     };
 
     return (
@@ -153,6 +153,27 @@ export default function BookingsManagement() {
                                 />
                             </div>
                             <div className="md:col-span-2 space-y-2">
+                                <label className="text-sm font-bold text-zinc-500">Pickup Service</label>
+                                <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer select-none transition-all duration-300 ${editingBooking.isPickup ? 'bg-emerald-50 border-emerald-200' : 'bg-zinc-50 border-zinc-200'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <Truck className={`w-5 h-5 transition-colors duration-300 ${editingBooking.isPickup ? 'text-emerald-600' : 'text-zinc-400'}`} />
+                                        <span className="text-sm font-bold text-zinc-700">
+                                            {editingBooking.isPickup ? 'Pickup & Drop enabled' : 'Walk-in (no pickup)'}
+                                        </span>
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type="checkbox"
+                                            checked={editingBooking.isPickup || false}
+                                            onChange={(e) => setEditingBooking({ ...editingBooking, isPickup: e.target.checked })}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-12 h-7 bg-zinc-200 rounded-full peer-checked:bg-emerald-500 transition-colors duration-300" />
+                                        <div className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 transition-transform duration-300" />
+                                    </div>
+                                </label>
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
                                 <label className="text-sm font-bold text-zinc-500">Address</label>
                                 <textarea
                                     value={editingBooking.address || ''}
@@ -190,130 +211,149 @@ export default function BookingsManagement() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-5">
                 {bookings.length === 0 ? (
-                    <div className="p-12 text-center bg-white rounded-3xl border border-zinc-200">
-                        <Calendar className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-900">No bookings found</h3>
-                        <p className="text-zinc-500">New bookings will appear here once customers start booking.</p>
+                    <div className="p-16 text-center bg-white rounded-3xl border-2 border-dashed border-zinc-200">
+                        <Calendar className="w-14 h-14 text-zinc-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-zinc-900 mb-1">No bookings yet</h3>
+                        <p className="text-zinc-400 text-sm">New bookings will appear here once customers start booking.</p>
                     </div>
                 ) : (
-                    bookings.map((booking) => (
-                        <div key={booking._id} className="p-6 bg-white rounded-2xl border border-zinc-200 hover:shadow-lg transition-all group">
-                            <div className="flex flex-wrap gap-6 items-center">
-                                <div className="flex-1 min-w-[200px]">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <User className="w-4 h-4 text-red-600" />
-                                        <h4 className="font-bold text-zinc-900">{booking.customerName}</h4>
-                                    </div>
-                                    <div className="flex flex-col gap-1 text-sm text-zinc-500">
-                                        <div className="flex items-center gap-2">
-                                            <Phone className="w-3.5 h-3.5" />
-                                            <span>{booking.phoneNumber}</span>
+                    bookings.map((booking) => {
+                        const status = statusConfig[booking.status] || statusConfig.pending;
+                        const StatusIcon = status.icon;
+                        return (
+                            <div key={booking._id} className={`bg-white rounded-2xl border border-zinc-200 border-l-4 ${status.border} hover:shadow-lg transition-all overflow-hidden`}>
+                                {/* Top Row: Key info + actions */}
+                                <div className="p-5 pb-4">
+                                    <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+                                        {/* Customer */}
+                                        <div className="min-w-[180px]">
+                                            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Customer</p>
+                                            <h4 className="font-bold text-zinc-900 text-base mb-1">{booking.customerName}</h4>
+                                            <a href={`tel:${booking.phoneNumber}`} className="flex items-center gap-1.5 text-sm text-zinc-600 hover:text-red-600 transition-colors">
+                                                <Phone className="w-3.5 h-3.5" />
+                                                {booking.phoneNumber}
+                                            </a>
+                                            {booking.email && (
+                                                <p className="flex items-center gap-1.5 text-sm text-zinc-500 mt-0.5">
+                                                    <Mail className="w-3.5 h-3.5" />
+                                                    {booking.email}
+                                                </p>
+                                            )}
                                         </div>
-                                        {booking.email && (
-                                            <div className="flex items-center gap-2">
-                                                <Mail className="w-3.5 h-3.5" />
-                                                <span>{booking.email}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
 
-                                <div className="flex-1 min-w-[200px]">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Bike className="w-4 h-4 text-red-600" />
-                                        <h4 className="font-bold text-zinc-900">{booking.bikeBrand} {booking.bikeModel}</h4>
-                                    </div>
-                                    <div className="flex flex-col gap-1 text-sm text-zinc-500">
-                                        <div className="flex items-center gap-2">
-                                            <Tag className="w-3.5 h-3.5" />
-                                            <span>{booking.serviceType}</span>
+                                        {/* Vehicle */}
+                                        <div className="min-w-[160px]">
+                                            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Vehicle</p>
+                                            <h4 className="font-bold text-zinc-900 text-base mb-1">{booking.bikeBrand} {booking.bikeModel}</h4>
+                                            {booking.vehicleNumber && (
+                                                <p className="flex items-center gap-1.5 text-sm text-zinc-600">
+                                                    <Hash className="w-3.5 h-3.5" />
+                                                    <span className="font-mono font-semibold uppercase">{booking.vehicleNumber}</span>
+                                                </p>
+                                            )}
                                         </div>
-                                        {booking.vehicleNumber && (
-                                            <div className="flex items-center gap-2">
-                                                <Hash className="w-3.5 h-3.5" />
-                                                <span className="font-mono uppercase">{booking.vehicleNumber}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
 
-                                <div className="flex-1 min-w-[150px]">
-                                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Status & Date</div>
-                                    <div className="flex flex-col gap-2">
-                                        <p className="text-sm font-medium text-zinc-900">
-                                            {new Date(booking.bookingDate).toLocaleDateString(undefined, {
-                                                weekday: 'short', month: 'short', day: 'numeric'
-                                            })}
-                                        </p>
-                                        <div className="relative group/status w-fit">
-                                            <button className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter flex items-center gap-2 transition-all ${statusColors[booking.status]}`}>
-                                                {updatingId === booking._id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : booking.status}
-                                                <ChevronDown className="w-2.5 h-2.5" />
-                                            </button>
-
-                                            <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-xl opacity-0 invisible group-hover/status:opacity-100 group-hover/status:visible transition-all z-10 p-2">
-                                                {['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'].map((s) => (
-                                                    <button
-                                                        key={s}
-                                                        onClick={() => handleStatusChange(booking._id, s)}
-                                                        className="w-full text-left px-3 py-2 text-xs font-bold capitalize hover:bg-zinc-50 rounded-lg transition-colors"
-                                                    >
-                                                        {s}
+                                        {/* Date & Badges */}
+                                        <div className="min-w-[140px]">
+                                            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-2">Booked</p>
+                                            <p className="font-semibold text-zinc-900 text-sm">
+                                                {new Date(booking.bookingDate).toLocaleDateString(undefined, {
+                                                    weekday: 'short', month: 'short', day: 'numeric'
+                                                })}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                {/* Status dropdown */}
+                                                <div className="relative group/status">
+                                                    <button className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wide ${status.bg} ${status.text}`}>
+                                                        {updatingId === booking._id ? (
+                                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        ) : (
+                                                            <StatusIcon className="w-3.5 h-3.5" />
+                                                        )}
+                                                        {booking.status}
+                                                        <ChevronDown className="w-3 h-3 opacity-60" />
                                                     </button>
-                                                ))}
+                                                    <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-zinc-200 rounded-xl shadow-2xl opacity-0 invisible group-hover/status:opacity-100 group-hover/status:visible transition-all z-10 p-1.5">
+                                                        {['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'].map((s) => {
+                                                            const sc = statusConfig[s];
+                                                            const SIcon = sc.icon;
+                                                            return (
+                                                                <button
+                                                                    key={s}
+                                                                    onClick={() => handleStatusChange(booking._id, s)}
+                                                                    className={`w-full text-left px-3 py-2 text-xs font-bold capitalize rounded-lg transition-colors flex items-center gap-2 ${booking.status === s ? `${sc.bg} ${sc.text}` : 'hover:bg-zinc-50 text-zinc-600'}`}
+                                                                >
+                                                                    <SIcon className="w-3.5 h-3.5" />
+                                                                    {s}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                {/* Pickup badge */}
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold ${booking.isPickup ? 'bg-emerald-500/15 text-emerald-700' : 'bg-zinc-200/60 text-zinc-500'}`}>
+                                                    <Truck className="w-3.5 h-3.5" />
+                                                    {booking.isPickup ? 'Pickup' : 'Walk-in'}
+                                                </span>
                                             </div>
+                                        </div>
+
+                                        {/* Actions - always visible */}
+                                        <div className="flex items-center gap-1 ml-auto">
+                                            <button
+                                                onClick={() => setEditingBooking(booking)}
+                                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleGenerateInvoice(booking)}
+                                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                                Invoice
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(booking._id)}
+                                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                    <button
-                                        onClick={() => setEditingBooking(booking)}
-                                        className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Edit Booking"
-                                    >
-                                        <Edit2 className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleGenerateInvoice(booking)}
-                                        className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                        title="Generate Invoice"
-                                    >
-                                        <FileText className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(booking._id)}
-                                        className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Delete Booking"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
-                                </div>
+                                {/* Bottom Row: Address & Notes */}
+                                {(booking.address || booking.notes) && (
+                                    <div className="px-5 pb-4 pt-0">
+                                        <div className="grid md:grid-cols-2 gap-3 border-t border-zinc-100 pt-4">
+                                            {booking.address && (
+                                                <div className="flex gap-3 p-3 bg-red-50 rounded-xl text-sm">
+                                                    <MapPin className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <span className="font-bold text-zinc-800 text-xs block mb-0.5">Pickup Address</span>
+                                                        <span className="text-zinc-600 text-xs">{booking.address}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {booking.notes && (
+                                                <div className="flex gap-3 p-3 bg-zinc-100 rounded-xl text-sm">
+                                                    <FileText className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <span className="font-bold text-zinc-800 text-xs block mb-0.5">Notes</span>
+                                                        <span className="text-zinc-600 text-xs">{booking.notes}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-
-                            {(booking.address || booking.notes) && (
-                                <div className="mt-4 grid md:grid-cols-2 gap-4">
-                                    {booking.address && (
-                                        <div className="p-3 bg-red-50/30 rounded-xl text-xs text-zinc-600 border border-red-100/50 flex gap-3">
-                                            <MapPin className="w-4 h-4 text-red-600 flex-shrink-0" />
-                                            <div>
-                                                <span className="font-bold text-zinc-900 block mb-1">Pickup Address:</span>
-                                                {booking.address}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {booking.notes && (
-                                        <div className="p-3 bg-zinc-50 rounded-xl text-xs text-zinc-500 border border-zinc-100">
-                                            <span className="font-bold text-zinc-900 block mb-1">Customer Notes:</span>
-                                            {booking.notes}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </div>

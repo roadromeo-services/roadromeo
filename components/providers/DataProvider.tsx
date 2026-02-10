@@ -48,6 +48,7 @@ interface Booking {
     status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
     totalAmount: number;
     notes?: string;
+    isPickup?: boolean;
 }
 
 interface Billing {
@@ -67,6 +68,7 @@ interface Billing {
     updatedAt: string;
     vehicleNumber?: string;
     customerName?: string;
+    phoneNumber?: string;
 }
 
 interface DataState {
