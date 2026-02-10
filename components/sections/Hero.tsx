@@ -251,7 +251,7 @@ export const Hero = () => {
               </div>
 
               <Button type="submit" fullWidth className="btn-primary py-5 text-xl shadow-primary/20">
-                {isPickup ? 'Get Free Pickup' : 'Book Service'}
+               Book Service
               </Button>
             </form>
           </div>

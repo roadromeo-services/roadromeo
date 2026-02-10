@@ -25,8 +25,8 @@ export default async function EBillPage({ params }: { params: Promise<{ id: stri
     const subtotal = bill.items?.reduce((acc: number, i: any) => acc + (i.price * i.quantity), 0) || 0;
 
     return (
-        <div className="min-h-screen bg-zinc-50 py-8 px-4">
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bill-page min-h-screen bg-zinc-50 py-8 px-4">
+            <div className="bill-card max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
                 {/* Header */}
                 <div className="bg-zinc-900 px-8 py-8 sm:px-12">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
