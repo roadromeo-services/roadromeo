@@ -68,6 +68,7 @@ interface Billing {
     updatedAt: string;
     vehicleNumber?: string;
     customerName?: string;
+    phoneNumber?: string;
 }
 
 interface DataState {
