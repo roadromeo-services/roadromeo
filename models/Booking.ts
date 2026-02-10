@@ -13,6 +13,7 @@ export interface IBooking extends Document {
     status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
     totalAmount: number;
     notes?: string;
+    isPickup?: boolean;
 }
 
 const BookingSchema: Schema = new Schema({
@@ -32,6 +33,7 @@ const BookingSchema: Schema = new Schema({
     },
     totalAmount: { type: Number, required: true, default: 0 },
     notes: { type: String },
+    isPickup: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.models.Booking || mongoose.model<IBooking>('Booking', BookingSchema);

@@ -48,6 +48,7 @@ interface Booking {
     status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
     totalAmount: number;
     notes?: string;
+    isPickup?: boolean;
 }
 
 interface Billing {

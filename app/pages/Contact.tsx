@@ -13,6 +13,7 @@ export const Contact = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+  const [isPickup, setIsPickup] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const brandOptions = bikeBrands.map(brand => ({
@@ -33,7 +34,7 @@ export const Contact = () => {
     if (!/^[0-9]{10}$/.test(phone)) newErrors.phone = 'Enter a valid 10-digit number';
     if (!selectedBrand) newErrors.brand = 'Please select a brand';
     if (!selectedModel) newErrors.model = 'Please select a model';
-    if (!address.trim()) newErrors.address = 'Please enter your pickup address';
+    if (isPickup && !address.trim()) newErrors.address = 'Please enter your pickup address';
     return newErrors;
   };
 
@@ -56,17 +57,18 @@ export const Contact = () => {
         phoneNumber: phone,
         bikeBrand: brandName,
         bikeModel: selectedModel,
-        address: address,
+        address: isPickup ? address : '',
         bookingDate: new Date(),
         totalAmount: 0,
         status: 'pending',
+        isPickup,
         notes: message || 'Booked from Contact page'
       });
     } catch (err) {
       console.error('Database booking failed, but proceeding to WhatsApp:', err);
     }
 
-    const whatsappMessage = `Hi! I want to book a service.\n\nName: ${name}\nPhone: ${phone}\nAddress: ${address}\nBike: ${brandName} ${selectedModel}\nMessage: ${message}`;
+    const whatsappMessage = `Hi! I want to book a service.\n\nName: ${name}\nPhone: ${phone}\nPickup: ${isPickup ? 'Yes' : 'No'}${isPickup ? `\nAddress: ${address}` : ''}\nBike: ${brandName} ${selectedModel}\nMessage: ${message}`;
     const whatsappLink = `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
     window.open(whatsappLink, '_blank');
   };
@@ -160,16 +162,43 @@ export const Contact = () => {
                   </div>
                 </div>
 
-                <div>
-                  <Input
-                    label="Pickup Address"
-                    placeholder="Enter your pickup address"
-                    value={address}
-                    onChange={(e) => { setAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
-                    className={errors.address ? '!border-red-500' : ''}
-                  />
-                  {errors.address && <p className="text-red-500 text-xs font-medium mt-1">{errors.address}</p>}
-                </div>
+                <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer select-none transition-all duration-300 ${isPickup ? 'bg-primary/5 border-primary/30' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${isPickup ? 'bg-primary/15' : 'bg-gray-200/60'}`}>
+                      <MapPin className={`w-5 h-5 transition-colors duration-300 ${isPickup ? 'text-primary' : 'text-gray-400'}`} />
+                    </div>
+                    <div>
+                      <span className="text-sm font-semibold text-text-primary block">Free Pickup & Drop</span>
+                      <span className="text-xs text-gray-400">We'll pick up & deliver your bike</span>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={isPickup}
+                      onChange={(e) => {
+                        setIsPickup(e.target.checked);
+                        if (!e.target.checked) setErrors(prev => ({ ...prev, address: '' }));
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-12 h-7 bg-gray-200 rounded-full peer-checked:bg-primary transition-colors duration-300" />
+                    <div className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 transition-transform duration-300" />
+                  </div>
+                </label>
+
+                {isPickup && (
+                  <div>
+                    <Input
+                      label="Pickup Address"
+                      placeholder="Enter your pickup address"
+                      value={address}
+                      onChange={(e) => { setAddress(e.target.value); setErrors(prev => ({ ...prev, address: '' })); }}
+                      className={errors.address ? '!border-red-500' : ''}
+                    />
+                    {errors.address && <p className="text-red-500 text-xs font-medium mt-1">{errors.address}</p>}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-1">

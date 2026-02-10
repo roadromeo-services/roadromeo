@@ -5,7 +5,7 @@ import { useData } from '@/components/providers/DataProvider';
 import {
     Loader2, Calendar, User, Bike, Mail, Phone, Tag,
     MoreVertical, CheckCircle, Clock, XCircle, PlayCircle,
-    FileText, Trash2, Edit2, ChevronDown, MapPin, Hash, X, Save
+    FileText, Trash2, Edit2, ChevronDown, MapPin, Hash, X, Save, Truck
 } from 'lucide-react';
 
 export default function BookingsManagement() {
@@ -153,6 +153,27 @@ export default function BookingsManagement() {
                                 />
                             </div>
                             <div className="md:col-span-2 space-y-2">
+                                <label className="text-sm font-bold text-zinc-500">Pickup Service</label>
+                                <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer select-none transition-all duration-300 ${editingBooking.isPickup ? 'bg-emerald-50 border-emerald-200' : 'bg-zinc-50 border-zinc-200'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <Truck className={`w-5 h-5 transition-colors duration-300 ${editingBooking.isPickup ? 'text-emerald-600' : 'text-zinc-400'}`} />
+                                        <span className="text-sm font-bold text-zinc-700">
+                                            {editingBooking.isPickup ? 'Pickup & Drop enabled' : 'Walk-in (no pickup)'}
+                                        </span>
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            type="checkbox"
+                                            checked={editingBooking.isPickup || false}
+                                            onChange={(e) => setEditingBooking({ ...editingBooking, isPickup: e.target.checked })}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-12 h-7 bg-zinc-200 rounded-full peer-checked:bg-emerald-500 transition-colors duration-300" />
+                                        <div className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform peer-checked:translate-x-5 transition-transform duration-300" />
+                                    </div>
+                                </label>
+                            </div>
+                            <div className="md:col-span-2 space-y-2">
                                 <label className="text-sm font-bold text-zinc-500">Address</label>
                                 <textarea
                                     value={editingBooking.address || ''}
@@ -217,6 +238,10 @@ export default function BookingsManagement() {
                                                 <span>{booking.email}</span>
                                             </div>
                                         )}
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider w-fit mt-1 ${booking.isPickup ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}>
+                                            <Truck className="w-3 h-3" />
+                                            {booking.isPickup ? 'Pickup' : 'Walk-in'}
+                                        </span>
                                     </div>
                                 </div>
 
