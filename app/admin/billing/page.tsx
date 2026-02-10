@@ -698,7 +698,7 @@ export default function BillingManagement() {
                                                 {new Date(bill.createdAt).toLocaleDateString()}
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                <div className="flex items-center justify-end gap-2 opacity-100 group-hover:text-red-500 transition-all">
                                                     <button
                                                         onClick={() => {
                                                             const billUrl = `${window.location.origin}/bill/${bill._id}`;
