@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header, Footer } from "@/components/layout";
-import { FloatingButtons } from "@/components/widgets/FloatingButtons";
+import { LayoutShell } from "@/components/layout";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { DataProvider } from "@/components/providers/DataProvider";
 
@@ -141,12 +140,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
           <DataProvider>
-            <Header />
-            <main className="flex-1 pt-24 lg:pt-32">
-              {children}
-            </main>
-            <Footer />
-            <FloatingButtons />
+            <LayoutShell>{children}</LayoutShell>
           </DataProvider>
         </AuthProvider>
       </body>

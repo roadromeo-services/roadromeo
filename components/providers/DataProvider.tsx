@@ -71,12 +71,29 @@ interface Billing {
     phoneNumber?: string;
 }
 
+interface Product {
+    _id: string;
+    name: string;
+    barcode: string;
+    sku?: string;
+    category: 'spare-part' | 'oil' | 'accessory' | 'consumable' | 'other';
+    price: number;
+    costPrice?: number;
+    stock: number;
+    unit: string;
+    description?: string;
+    minStock?: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
 interface DataState {
     services: Service[];
     pricing: PricingPackage[];
     bikes: BikeBrand[];
     bookings: Booking[];
     billing: Billing[];
+    products: Product[];
     loading: boolean;
     error: string | null;
 }
@@ -89,6 +106,11 @@ interface DataContextType extends DataState {
     createBilling: (billingData: any) => Promise<any>;
     updateBilling: (id: string, data: any) => Promise<any>;
     deleteBilling: (id: string) => Promise<void>;
+    createProduct: (data: any) => Promise<any>;
+    updateProduct: (id: string, data: any) => Promise<any>;
+    deleteProduct: (id: string) => Promise<void>;
+    searchProducts: (query: string) => Promise<Product[]>;
+    lookupBarcode: (barcode: string) => Promise<Product | null>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -103,6 +125,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         bikes: [],
         bookings: [],
         billing: [],
+        products: [],
         loading: true,
         error: null,
     });
@@ -125,14 +148,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
             let bookingsData: any[] = [];
             let billingData: any[] = [];
+            let productsData: any[] = [];
 
             if (isAdmin) {
-                const [bookingsRes, billingRes] = await Promise.all([
+                const [bookingsRes, billingRes, productsRes] = await Promise.all([
                     fetch('/api/bookings'),
                     fetch('/api/billing'),
+                    fetch('/api/products'),
                 ]);
                 bookingsData = bookingsRes.ok ? await bookingsRes.json() : [];
                 billingData = billingRes.ok ? await billingRes.json() : [];
+                productsData = productsRes.ok ? await productsRes.json() : [];
             }
 
             setState({
@@ -141,6 +167,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 bikes: bikesData,
                 bookings: bookingsData,
                 billing: billingData,
+                products: productsData,
                 loading: false,
                 error: null,
             });
@@ -244,6 +271,74 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const createProduct = async (data: any) => {
+        try {
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Failed to create product');
+            }
+            const newProduct = await res.json();
+            fetchData();
+            return newProduct;
+        } catch (err) {
+            console.error('Error adding product:', err);
+            throw err;
+        }
+    };
+
+    const updateProduct = async (id: string, data: any) => {
+        try {
+            const res = await fetch(`/api/products/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to update product');
+            const updated = await res.json();
+            fetchData();
+            return updated;
+        } catch (err) {
+            console.error('Error updating product:', err);
+            throw err;
+        }
+    };
+
+    const deleteProduct = async (id: string) => {
+        try {
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete product');
+            fetchData();
+        } catch (err) {
+            console.error('Error deleting product:', err);
+            throw err;
+        }
+    };
+
+    const searchProducts = async (query: string): Promise<Product[]> => {
+        try {
+            const res = await fetch(`/api/products?search=${encodeURIComponent(query)}`);
+            if (!res.ok) return [];
+            return await res.json();
+        } catch {
+            return [];
+        }
+    };
+
+    const lookupBarcode = async (barcode: string): Promise<Product | null> => {
+        try {
+            const res = await fetch(`/api/products?barcode=${encodeURIComponent(barcode)}`);
+            if (!res.ok) return null;
+            return await res.json();
+        } catch {
+            return null;
+        }
+    };
+
     useEffect(() => {
         fetchData();
     }, [fetchData]);
@@ -258,7 +353,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 deleteBooking,
                 createBilling,
                 updateBilling,
-                deleteBilling
+                deleteBilling,
+                createProduct,
+                updateProduct,
+                deleteProduct,
+                searchProducts,
+                lookupBarcode
             }}
         >
             {children}

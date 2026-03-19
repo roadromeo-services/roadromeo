@@ -150,15 +150,15 @@ export default function AdminDashboard() {
         cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
     };
 
-    const selectClass = 'bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 outline-none focus:border-red-500 transition-colors cursor-pointer appearance-none';
+    const selectClass = 'bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-700 outline-none focus:border-red-500 transition-colors cursor-pointer appearance-none w-full sm:w-auto';
 
     return (
         <div className="space-y-8">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-black mb-1">Dashboard</h2>
-                    <p className="text-zinc-400">Business overview at a glance.</p>
+                    <h2 className="text-2xl lg:text-3xl font-black mb-1">Dashboard</h2>
+                    <p className="text-zinc-400 text-sm">Business overview at a glance.</p>
                 </div>
             </div>
 
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
                         </button>
                     )}
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
                     {/* Month */}
                     <select
                         value={selectedMonth}

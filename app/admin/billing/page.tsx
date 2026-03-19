@@ -1,23 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useData } from '@/components/providers/DataProvider';
 import {
     Loader2, Receipt, Search, Plus, Filter, Download,
     Trash2, Edit2, CheckCircle, XCircle, ChevronDown,
-    PlusCircle, MinusCircle, Save, X, Printer, User, Bike, MapPin, Phone, Share2
+    PlusCircle, MinusCircle, Save, X, Printer, User, Bike, MapPin, Phone, Share2,
+    ScanBarcode
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { siteConfig } from '@/lib/config/site';
 
 export default function BillingManagement() {
-    const { billing, updateBilling, deleteBilling, createBilling, loading, bookings } = useData();
+    const { billing, updateBilling, deleteBilling, createBilling, loading, bookings, products, searchProducts, lookupBarcode } = useData();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editData, setEditData] = useState<any>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [printingInvoice, setPrintingInvoice] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [barcodeScanMode, setBarcodeScanMode] = useState(false);
+    const [suggestions, setSuggestions] = useState<{ index: number; items: any[] }>({ index: -1, items: [] });
+    const barcodeRef = useRef<HTMLInputElement>(null);
+    const suggestionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleSave = async () => {
         try {
@@ -71,6 +76,82 @@ export default function BillingManagement() {
         const discount = Math.round((subtotal * (editData.discountPercent || 0)) / 100);
         const total = subtotal + (editData.tax || 0) - discount;
         setEditData({ ...editData, items: newItems, discount, totalAmount: total });
+    };
+
+    // Handle barcode scan in billing — adds item from inventory
+    const handleBillBarcodeScan = async (barcode: string) => {
+        const trimmed = barcode.trim();
+        if (!trimmed || !editData) return;
+
+        const product = await lookupBarcode(trimmed);
+        if (product) {
+            // Check if item already exists in the list
+            const existingIdx = editData.items.findIndex((item: any) =>
+                item.description === product.name
+            );
+
+            if (existingIdx >= 0) {
+                // Increment quantity
+                const newItems = [...editData.items];
+                newItems[existingIdx] = {
+                    ...newItems[existingIdx],
+                    quantity: newItems[existingIdx].quantity + 1
+                };
+                const subtotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                const discount = Math.round((subtotal * (editData.discountPercent || 0)) / 100);
+                setEditData({ ...editData, items: newItems, discount, totalAmount: subtotal + (editData.tax || 0) - discount });
+            } else {
+                // Add new item
+                const newItems = [...editData.items, {
+                    description: product.name,
+                    quantity: 1,
+                    price: product.price
+                }];
+                const subtotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                const discount = Math.round((subtotal * (editData.discountPercent || 0)) / 100);
+                setEditData({ ...editData, items: newItems, discount, totalAmount: subtotal + (editData.tax || 0) - discount });
+            }
+        } else {
+            alert(`No product found with barcode: ${trimmed}`);
+        }
+    };
+
+    // Handle description typing — show autocomplete suggestions from inventory
+    const handleDescriptionChange = (index: number, value: string) => {
+        updateItem(index, 'description', value);
+
+        if (suggestionTimeoutRef.current) {
+            clearTimeout(suggestionTimeoutRef.current);
+        }
+
+        if (value.length < 2) {
+            setSuggestions({ index: -1, items: [] });
+            return;
+        }
+
+        suggestionTimeoutRef.current = setTimeout(() => {
+            const query = value.toLowerCase();
+            const matches = products.filter(p =>
+                p.name.toLowerCase().includes(query) ||
+                p.barcode.includes(query) ||
+                (p.sku?.toLowerCase().includes(query) ?? false)
+            ).slice(0, 5);
+            setSuggestions({ index, items: matches });
+        }, 150);
+    };
+
+    // Select a suggestion — fill in description and price
+    const selectSuggestion = (index: number, product: any) => {
+        const newItems = [...editData.items];
+        newItems[index] = {
+            ...newItems[index],
+            description: product.name,
+            price: product.price
+        };
+        const subtotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+        const discount = Math.round((subtotal * (editData.discountPercent || 0)) / 100);
+        setEditData({ ...editData, items: newItems, discount, totalAmount: subtotal + (editData.tax || 0) - discount });
+        setSuggestions({ index: -1, items: [] });
     };
 
     // Filter billing by vehicle number or customer name
@@ -294,10 +375,10 @@ export default function BillingManagement() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between print:hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
                 <div>
-                    <h2 className="text-3xl font-black text-zinc-900">Billing</h2>
-                    <p className="text-zinc-500">Track payments, parts, and labor costs.</p>
+                    <h2 className="text-2xl lg:text-3xl font-black text-zinc-900">Billing</h2>
+                    <p className="text-zinc-500 text-sm">Track payments, parts, and labor costs.</p>
                 </div>
                 {!isAdding && !editingId && (
                     <button
@@ -530,6 +611,27 @@ export default function BillingManagement() {
                         </div>
 
                         <div className="space-y-4">
+                            {/* Barcode Scanner for Billing */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                <div className="flex items-center gap-2">
+                                    <ScanBarcode className="w-4 h-4 text-amber-600" />
+                                    <span className="text-xs font-bold text-amber-800">Quick Add via Barcode:</span>
+                                </div>
+                                <input
+                                    ref={barcodeRef}
+                                    type="text"
+                                    placeholder="Scan barcode to add item..."
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleBillBarcodeScan((e.target as HTMLInputElement).value);
+                                            (e.target as HTMLInputElement).value = '';
+                                        }
+                                    }}
+                                    className="flex-1 bg-white border border-amber-300 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:border-amber-500 w-full sm:w-auto"
+                                />
+                            </div>
+
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-black uppercase text-zinc-400">Line Items (Parts & Labor)</label>
                                 <button onClick={addItem} className="text-xs font-bold text-red-600 flex items-center gap-1 hover:underline">
@@ -538,17 +640,51 @@ export default function BillingManagement() {
                             </div>
 
                             {editData.items.map((item: any, idx: number) => (
-                                <div key={idx} className="grid grid-cols-12 gap-4 items-end bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-                                    <div className="col-span-6 space-y-2">
+                                <div key={idx} className="grid grid-cols-12 gap-3 lg:gap-4 items-end bg-zinc-50 p-3 lg:p-4 rounded-2xl border border-zinc-100">
+                                    <div className="col-span-12 sm:col-span-6 space-y-2 relative">
                                         <label className="text-[10px] font-bold text-zinc-400">Description</label>
                                         <input
                                             value={item.description}
-                                            onChange={(e) => updateItem(idx, 'description', e.target.value)}
+                                            onChange={(e) => handleDescriptionChange(idx, e.target.value)}
+                                            onFocus={() => {
+                                                if (item.description.length >= 2) {
+                                                    handleDescriptionChange(idx, item.description);
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                // Delay to allow clicking suggestion
+                                                setTimeout(() => setSuggestions({ index: -1, items: [] }), 200);
+                                            }}
                                             className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-red-600"
-                                            placeholder="Engine Oil, Brake Pads, etc."
+                                            placeholder="Type to search inventory..."
                                         />
+                                        {/* Autocomplete Dropdown */}
+                                        {suggestions.index === idx && suggestions.items.length > 0 && (
+                                            <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden">
+                                                {suggestions.items.map((product) => (
+                                                    <button
+                                                        key={product._id}
+                                                        type="button"
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault();
+                                                            selectSuggestion(idx, product);
+                                                        }}
+                                                        className="w-full text-left px-3 py-2.5 hover:bg-zinc-50 transition-colors flex items-center justify-between gap-2 border-b border-zinc-50 last:border-0"
+                                                    >
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-bold text-zinc-900 truncate">{product.name}</p>
+                                                            <p className="text-[10px] text-zinc-400 font-mono">{product.barcode}</p>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <p className="text-sm font-black text-red-600">₹{product.price}</p>
+                                                            <p className="text-[10px] text-zinc-400">{product.stock} in stock</p>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="col-span-2 space-y-2">
+                                    <div className="col-span-4 sm:col-span-2 space-y-2">
                                         <label className="text-[10px] font-bold text-zinc-400">Qty</label>
                                         <input
                                             type="number"
@@ -557,7 +693,7 @@ export default function BillingManagement() {
                                             className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-red-600"
                                         />
                                     </div>
-                                    <div className="col-span-3 space-y-2">
+                                    <div className="col-span-6 sm:col-span-3 space-y-2">
                                         <label className="text-[10px] font-bold text-zinc-400">Price (₹)</label>
                                         <input
                                             type="number"
@@ -566,7 +702,7 @@ export default function BillingManagement() {
                                             className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 outline-none focus:border-red-600"
                                         />
                                     </div>
-                                    <div className="col-span-1 pb-1">
+                                    <div className="col-span-2 sm:col-span-1 pb-1">
                                         <button onClick={() => removeItem(idx)} className="p-2 text-zinc-300 hover:text-red-600 transition-colors">
                                             <Trash2 className="w-5 h-5" />
                                         </button>
