@@ -15,7 +15,8 @@ import {
     User,
     ClipboardList,
     Receipt,
-    Package
+    Package,
+    Bell
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Services', href: '/admin/services', icon: Wrench },
         { name: 'Pricing', href: '/admin/pricing', icon: Tag },
         { name: 'Bikes', href: '/admin/bikes', icon: Bike },
+        { name: 'Alerts', href: '/admin/alerts', icon: Bell },
     ];
 
     const isActive = (href: string) => {
