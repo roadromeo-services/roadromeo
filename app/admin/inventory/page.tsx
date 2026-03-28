@@ -5,7 +5,7 @@ import { useData } from '@/components/providers/DataProvider';
 import {
     Loader2, Package, Search, Plus, Trash2, Edit2,
     Save, X, ScanBarcode, AlertTriangle, ArrowUpDown,
-    PackagePlus, PackageMinus, Filter
+    PackagePlus, PackageMinus, Filter, Upload
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -25,7 +25,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export default function InventoryManagement() {
-    const { products, createProduct, updateProduct, deleteProduct, loading } = useData();
+    const { products, createProduct, updateProduct, deleteProduct, refreshData, loading } = useData();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isAdding, setIsAdding] = useState(false);
     const [editData, setEditData] = useState<any>(null);
@@ -34,6 +34,10 @@ export default function InventoryManagement() {
     const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price' | 'recent'>('recent');
     const [scanMode, setScanMode] = useState<false | 'in' | 'out'>(false);
     const [stockAdjust, setStockAdjust] = useState<{ id: string; type: 'in' | 'out'; amount: number } | null>(null);
+    const [showUpload, setShowUpload] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadResult, setUploadResult] = useState<any>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Barcode scanner input ref
     const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -143,6 +147,24 @@ export default function InventoryManagement() {
         }
     };
 
+    const handleFileUpload = async (file: File) => {
+        setUploading(true);
+        setUploadResult(null);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/products/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            setUploadResult(data);
+            if (data.updated > 0) await refreshData();
+        } catch {
+            setUploadResult({ success: false, error: 'Upload failed' });
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     // Filter & sort
     const filteredProducts = products
         .filter(p => {
@@ -204,26 +226,35 @@ export default function InventoryManagement() {
                         <span className="hidden sm:inline">Scan Out</span>
                     </button>
                     {!isAdding && !editingId && (
-                        <button
-                            onClick={() => {
-                                setIsAdding(true);
-                                setEditData({
-                                    name: '',
-                                    barcode: '',
-                                    category: 'other',
-                                    price: 0,
-                                    costPrice: 0,
-                                    stock: 0,
-                                    unit: 'pcs',
-                                    description: '',
-                                    minStock: 5,
-                                });
-                            }}
-                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-red-600/20 text-sm"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Product
-                        </button>
+                        <>
+                            <button
+                                onClick={() => { setShowUpload(true); setUploadResult(null); }}
+                                className="bg-zinc-100 text-zinc-700 hover:bg-zinc-200 font-bold py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all text-sm"
+                            >
+                                <Upload className="w-4 h-4" />
+                                <span className="hidden sm:inline">Upload Prices</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsAdding(true);
+                                    setEditData({
+                                        name: '',
+                                        barcode: '',
+                                        category: 'other',
+                                        price: 0,
+                                        costPrice: 0,
+                                        stock: 0,
+                                        unit: 'pcs',
+                                        description: '',
+                                        minStock: 5,
+                                    });
+                                }}
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-red-600/20 text-sm"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Product
+                            </button>
+                        </>
                     )}
                 </div>
             </div>
@@ -340,6 +371,93 @@ export default function InventoryManagement() {
                                 Confirm
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Upload Prices Modal */}
+            {showUpload && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-zinc-900">Upload Price List</h3>
+                            <button onClick={() => setShowUpload(false)} className="p-1.5 text-zinc-400 hover:bg-zinc-100 rounded-lg">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-sm text-zinc-500 mb-1">
+                            Upload an Excel file with these columns:
+                        </p>
+                        <div className="flex gap-2 mb-4">
+                            <span className="px-2 py-1 bg-zinc-100 rounded-md text-xs font-mono font-bold text-zinc-600">bar_code</span>
+                            <span className="px-2 py-1 bg-zinc-100 rounded-md text-xs font-mono font-bold text-zinc-600">selling_price</span>
+                            <span className="px-2 py-1 bg-zinc-100 rounded-md text-xs font-mono font-bold text-zinc-600">cost_price</span>
+                        </div>
+                        <p className="text-xs text-zinc-400 mb-4">
+                            This will update selling price and cost price for existing products matched by barcode.
+                        </p>
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".xlsx,.xls"
+                            className="hidden"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload(file);
+                            }}
+                        />
+
+                        {!uploadResult && (
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
+                                className="w-full py-4 border-2 border-dashed border-zinc-300 rounded-xl hover:border-red-400 hover:bg-red-50 transition-all text-center cursor-pointer"
+                            >
+                                {uploading ? (
+                                    <div className="flex items-center justify-center gap-2 text-zinc-500">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span className="text-sm font-medium">Uploading...</span>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <Upload className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
+                                        <p className="text-sm font-bold text-zinc-600">Click to select Excel file</p>
+                                        <p className="text-xs text-zinc-400 mt-1">.xlsx or .xls</p>
+                                    </div>
+                                )}
+                            </button>
+                        )}
+
+                        {uploadResult && (
+                            <div className={`p-4 rounded-xl ${uploadResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                <p className={`text-sm font-bold mb-2 ${uploadResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                                    {uploadResult.success ? 'Upload Complete' : 'Upload Failed'}
+                                </p>
+                                {uploadResult.error && (
+                                    <p className="text-xs text-red-600 mb-2">{uploadResult.error}</p>
+                                )}
+                                {uploadResult.total != null && (
+                                    <div className="space-y-1 text-xs text-zinc-600">
+                                        <p>Total rows: <span className="font-bold">{uploadResult.total}</span></p>
+                                        <p>Prices updated: <span className="font-bold text-green-600">{uploadResult.updated}</span></p>
+                                        {uploadResult.notFound > 0 && (
+                                            <p>Barcodes not found: <span className="font-bold text-amber-600">{uploadResult.notFound}</span></p>
+                                        )}
+                                        {uploadResult.skipped > 0 && (
+                                            <p>Skipped: <span className="font-bold text-red-600">{uploadResult.skipped}</span></p>
+                                        )}
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => { setUploadResult(null); }}
+                                    className="mt-3 w-full py-2 bg-white border border-zinc-200 rounded-lg text-sm font-bold text-zinc-600 hover:bg-zinc-50"
+                                >
+                                    Upload Another
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
