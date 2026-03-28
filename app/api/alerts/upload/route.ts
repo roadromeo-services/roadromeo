@@ -2,7 +2,38 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { getServerSession } from 'next-auth';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+
+function worksheetToRows(worksheet: ExcelJS.Worksheet): Record<string, string>[] {
+    const rows: Record<string, string>[] = [];
+    const headers: string[] = [];
+    worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) {
+            row.eachCell((cell, colNumber) => {
+                headers[colNumber] = String(cell.value ?? '').trim();
+            });
+            return;
+        }
+        const record: Record<string, string> = {};
+        for (let i = 1; i <= headers.length; i++) {
+            record[headers[i] || `col${i}`] = String(row.getCell(i).value ?? '').trim();
+        }
+        rows.push(record);
+    });
+    return rows;
+}
+
+function parseCsv(csvText: string): Record<string, string>[] {
+    const lines = csvText.split('\n').filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    return lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const record: Record<string, string> = {};
+        headers.forEach((h, i) => { record[h] = values[i] ?? ''; });
+        return record;
+    });
+}
 
 export async function POST(req: Request) {
     const session = await getServerSession();
@@ -42,9 +73,7 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'Google returned an HTML page instead of CSV. Make sure the sheet is shared as "Anyone with the link can view".' }, { status: 400 });
             }
 
-            const workbook = XLSX.read(csvText, { type: 'string' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '', raw: false });
+            rows = parseCsv(csvText);
         } else {
             rows = body.rows;
         }
@@ -56,10 +85,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const workbook = XLSX.read(buffer, { type: 'buffer' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: '', raw: false });
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(arrayBuffer);
+        const worksheet = workbook.worksheets[0];
+        if (!worksheet) {
+            return NextResponse.json({ error: 'No worksheet found in file' }, { status: 400 });
+        }
+        rows = worksheetToRows(worksheet);
     }
 
     if (!rows.length) {
